@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>[转]golang 反射 - jayhong博客</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="jayhong" />
+  <meta name="description" content="转自 https://juejin.im/post/5a75a4fb5188257a82110544#heading-2 什么是反射 反射在计算机领域是一种能够通过类型来检查自己的值的能力，在golang中反射提供了一种机制在运行时更新变量和检查它们的值、调" />
+
+  <meta name="keywords" content="jayhong, blog, golang" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0" />
+
+
+<link rel="canonical" href="https://jayhong.github.io/post/20190305-golang%E5%8F%8D%E5%B0%84/" />
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.19ae5a432863a072ec64433bb1020bd6d3401129f87d6f2ad5af3bcfd84168a1.css" integrity="sha256-Ga5aQyhjoHLsZEM7sQIL1tNAESn4fW8q1a87z9hBaKE=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="[转]golang 反射" />
+<meta property="og:description" content="转自 https://juejin.im/post/5a75a4fb5188257a82110544#heading-2 什么是反射 反射在计算机领域是一种能够通过类型来检查自己的值的能力，在golang中反射提供了一种机制在运行时更新变量和检查它们的值、调" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jayhong.github.io/post/20190305-golang%E5%8F%8D%E5%B0%84/" />
+<meta property="article:published_time" content="2019-03-05T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-03-05T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="[转]golang 反射">
+<meta itemprop="description" content="转自 https://juejin.im/post/5a75a4fb5188257a82110544#heading-2 什么是反射 反射在计算机领域是一种能够通过类型来检查自己的值的能力，在golang中反射提供了一种机制在运行时更新变量和检查它们的值、调">
+
+
+<meta itemprop="datePublished" content="2019-03-05T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-03-05T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="4829">
+
+
+
+<meta itemprop="keywords" content="golang,blog,反射,reflect," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[转]golang 反射"/>
+<meta name="twitter:description" content="转自 https://juejin.im/post/5a75a4fb5188257a82110544#heading-2 什么是反射 反射在计算机领域是一种能够通过类型来检查自己的值的能力，在golang中反射提供了一种机制在运行时更新变量和检查它们的值、调"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">jayhong博客</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          <div class="mobile-menu-parent">
+            <span class="mobile-submenu-open"></span>
+            <a href="https://jayhong.github.io/">
+              docs
+            </a>
+          </div>
+          <ul class="mobile-submenu-list">
+            
+              <li>
+                <a href="https://jayhong.github.io/post/jane-theme-preview/">Jane Theme Preview</a>
+              </li>
+            
+          </ul>
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      jayhong博客
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          <a class="menu-item-link menu-parent" href="https://jayhong.github.io/">docs</a>
+          <ul class="submenu">
+            
+              <li>
+                <a href="https://jayhong.github.io/post/jane-theme-preview/">Jane Theme Preview</a>
+              </li>
+            
+          </ul>
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">[转]golang 反射</h1>
+      
+      <div class="post-meta">
+        <time datetime="2019-03-05" class="post-time">
+          2019-03-05
+        </time>
+        <div class="post-category">
+            <a href="https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"> golang基础知识 </a>
+            
+          </div>
+        <span class="more-meta"> 约 4829 字 </span>
+          <span class="more-meta"> 预计阅读 10 分钟 </span>
+
+        
+        
+          <span id="busuanzi_container_page_pv">
+            | 阅读 <span id="busuanzi_value_page_pv"></span>
+          </span>
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#什么是反射">什么是反射</a></li>
+<li><a href="#types-和-interfaces">Types 和 interfaces</a></li>
+<li><a href="#golang中的反射">golang中的反射</a>
+<ul>
+<li>
+<ul>
+<li><a href="#reflect的基本功能typeof和valueof">reflect的基本功能TypeOf和ValueOf</a>
+<ul>
+<li><a href="#说明">说明</a></li>
+</ul></li>
+<li><a href="#从relfect-value中获取接口interface的信息">从relfect.Value中获取接口interface的信息</a>
+<ul>
+<li><a href="#已知原有类型-进行-强制转换">已知原有类型【进行“强制转换”】</a></li>
+<li><a href="#说明-1">说明</a></li>
+</ul></li>
+<li><a href="#未知原有类型-遍历探测其filed">未知原有类型【遍历探测其Filed】</a>
+<ul>
+<li><a href="#说明-2">说明</a></li>
+</ul></li>
+<li><a href="#通过reflect-value设置实际变量的值">通过reflect.Value设置实际变量的值</a></li>
+<li><a href="#通过reflect-valueof来进行方法的调用">通过reflect.ValueOf来进行方法的调用</a></li>
+<li><a href="#json转码的例子">json转码的例子</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#参考链接">参考链接</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<p>转自 <a href="https://juejin.im/post/5a75a4fb5188257a82110544#heading-2">https://juejin.im/post/5a75a4fb5188257a82110544#heading-2</a></p>
+
+<h2 id="什么是反射">什么是反射</h2>
+
+<p>反射在计算机领域是一种能够通过类型来检查自己的值的能力，在golang中反射提供了一种机制在运行时更新变量和检查它们的值、调用它们的方法和它们支持的内在操作，
+但是在编译时并不知道这些变量的具体类型。不同的编程语言提供的反射机制不一样。</p>
+
+<h2 id="types-和-interfaces">Types 和 interfaces</h2>
+
+<p>学习放射首先要知道golang中关于类型的一些原则</p>
+
+<ul>
+<li>变量包括type，value 两部分<br /></li>
+<li>type 包括 static type和concrete type. 简单来说 static type是你在编码是看见的类型(如int、string)，concrete type是runtime系统看见的类型<br /></li>
+<li>类型断言能否成功，取决于变量的concrete type，而不是static type. 因此，一个 reader变量如果它的concrete type也实现了write方法的话，它也可以被类型断言为writer.</li>
+</ul>
+
+<p>接下来要讲的反射，就是建立在类型之上的，Golang的指定类型的变量的类型是静态的（也就是指定int、string这些的变量，它的type是static type），
+在创建变量的时候就已经确定，反射主要与Golang的interface类型相关（它的type是concrete type），只有interface类型才有反射一说。</p>
+
+<p>在Golang的实现中，每个interface变量都有一个对应pair，pair中记录了实际变量的值和类型:</p>
+
+<pre><code>(value, type)
+</code></pre>
+
+<p>value是实际变量值，type是实际变量的类型。一个interface{}类型的变量包含了2个指针，一个指针指向值的类型【对应concrete type】，另外一个指针指向实际的值【对应value】。</p>
+
+<p>例如</p>
+
+<pre><code>var r io.Reader
+tty, err := os.OpenFile(&quot;/dev/tty&quot;, os.O_RDWR, 0)
+if err != nil {
+    return nil, err
+}
+r = tty
+</code></pre>
+
+<p>接口变量r的pair中将记录如下信息：(tty, *os.File)，这个pair在接口变量的连续赋值过程中是不变的，将接口变量r赋给另一个接口变量w:</p>
+
+<pre><code>var w io.Writer
+w = r.(io.Writer)
+</code></pre>
+
+<p>接口变量w的pair与r的pair相同，都是:(tty, *os.File)，即使w是空接口类型，pair也是不变的。
+interface及其pair的存在，是Golang中实现反射的前提，理解了pair，就更容易理解反射。反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。</p>
+
+<h2 id="golang中的反射">golang中的反射</h2>
+
+<h4 id="reflect的基本功能typeof和valueof">reflect的基本功能TypeOf和ValueOf</h4>
+
+<p>既然反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。那么在Golang的reflect反射包中有什么样的方式可以让我们直接获取到变量内部的信息呢？
+提供了两种类型（或者说两个方法）让我们可以很容易的访问接口变量内容，分别是reflect.ValueOf() 和 reflect.TypeOf()，看看官方的解释</p>
+
+<pre><code>// ValueOf returns a new Value initialized to the concrete value
+// stored in the interface i.  ValueOf(nil) returns the zero 
+func ValueOf(i interface{}) Value {...}
+</code></pre>
+
+<pre><code>// TypeOf returns the reflection Type that represents the dynamic type of i.
+// If i is a nil interface value, TypeOf returns nil.
+func TypeOf(i interface{}) Type {...}
+</code></pre>
+
+<p>reflect.TypeOf()是获取pair中的type，reflect.ValueOf()获取pair中的value，示例如下：</p>
+
+<pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;reflect&quot;
+)
+
+func main() {
+    var x float64 = 3.4
+    fmt.Println(&quot;type:&quot;, reflect.TypeOf(x))
+    fmt.Println(&quot;value: &quot;, reflect.ValueOf(num))
+}
+
+运行结果:
+type:  float64
+value:  3.4
+</code></pre>
+
+<h5 id="说明">说明</h5>
+
+<ul>
+<li><p>reflect.TypeOf： 直接给到了我们想要的type类型，如float64、int、各种pointer、struct 等等真实的类型</p></li>
+
+<li><p>reflect.ValueOf：直接给到了我们想要的具体的值，如1.2345这个具体数值，或者类似&amp;{1 &ldquo;Allen.Wu&rdquo; 25} 这样的结构体struct的值</p></li>
+
+<li><p>也就是说明反射可以将“接口类型变量”转换为“反射类型对象”，反射类型指的是reflect.Type和reflect.Value这两种</p></li>
+</ul>
+
+<h4 id="从relfect-value中获取接口interface的信息">从relfect.Value中获取接口interface的信息</h4>
+
+<p>当执行reflect.ValueOf(interface)之后，就得到了一个类型为”relfect.Value”变量，可以通过它本身的Interface()方法获得接口变量的真实内容，
+然后可以通过类型判断进行转换，转换为原有真实类型。不过，我们可能是已知原有类型，也有可能是未知原有类型，因此，下面分两种情况进行说明。</p>
+
+<h5 id="已知原有类型-进行-强制转换">已知原有类型【进行“强制转换”】</h5>
+
+<p>已知类型后转换为其对应的类型的做法如下，直接通过Interface方法然后强制转换，如下：</p>
+
+<pre><code>realValue := value.Interface().(已知的类型)
+</code></pre>
+
+<pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;reflect&quot;
+)
+
+func main() {
+    var num float64 = 1.2345
+
+    pointer := reflect.ValueOf(&amp;num)
+    value := reflect.ValueOf(num)
+
+    // 可以理解为“强制转换”，但是需要注意的时候，转换的时候，如果转换的类型不完全符合，则直接panic
+    // Golang 对类型要求非常严格，类型一定要完全符合
+    // 如下两个，一个是*float64，一个是float64，如果弄混，则会panic
+    convertPointer := pointer.Interface().(*float64)
+    convertValue := value.Interface().(float64)
+
+    fmt.Println(convertPointer)
+    fmt.Println(convertValue)
+}
+
+运行结果：
+0xc42000e238
+1.2345
+</code></pre>
+
+<h5 id="说明-1">说明</h5>
+
+<ul>
+<li>转换的时候，如果转换的类型不完全符合，则直接panic，类型要求非常严格！</li>
+<li>转换的时候，要区分是指针还是值</li>
+<li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”</li>
+</ul>
+
+<h4 id="未知原有类型-遍历探测其filed">未知原有类型【遍历探测其Filed】</h4>
+
+<p>很多情况下，我们可能并不知道其具体类型，那么这个时候，该如何做呢？需要我们进行遍历探测其Filed来得知，示例如下:</p>
+
+<pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;reflect&quot;
+)
+
+type User struct {
+    Id   int
+    Name string
+    Age  int
+}
+
+func (u User) ReflectCallFunc() {
+    fmt.Println(&quot;Allen.Wu ReflectCallFunc&quot;)
+}
+
+func main() {
+
+    user := User{1, &quot;Allen.Wu&quot;, 25}
+
+    DoFiledAndMethod(user)
+
+}
+
+// 通过接口来获取任意参数，然后一一揭晓
+func DoFiledAndMethod(input interface{}) {
+
+    getType := reflect.TypeOf(input)
+    fmt.Println(&quot;get Type is :&quot;, getType.Name())
+
+    getValue := reflect.ValueOf(input)
+    fmt.Println(&quot;get all Fields is:&quot;, getValue)
+
+    // 获取方法字段
+    // 1. 先获取interface的reflect.Type，然后通过NumField进行遍历
+    // 2. 再通过reflect.Type的Field获取其Field
+    // 3. 最后通过Field的Interface()得到对应的value
+    for i := 0; i &lt; getType.NumField(); i++ {
+        field := getType.Field(i)
+        value := getValue.Field(i).Interface()
+        fmt.Printf(&quot;%s: %v = %v\n&quot;, field.Name, field.Type, value)
+    }
+
+    // 获取方法
+    // 1. 先获取interface的reflect.Type，然后通过.NumMethod进行遍历
+    for i := 0; i &lt; getType.NumMethod(); i++ {
+        m := getType.Method(i)
+        fmt.Printf(&quot;%s: %v\n&quot;, m.Name, m.Type)
+    }
+}
+
+运行结果：
+get Type is : User
+get all Fields is: {1 Allen.Wu 25}
+Id: int = 1
+Name: string = Allen.Wu
+Age: int = 25
+ReflectCallFunc: func(main.User)
+
+</code></pre>
+
+<h5 id="说明-2">说明</h5>
+
+<p>通过运行结果可以得知获取未知类型的interface的具体变量及其类型的步骤为：</p>
+
+<ul>
+<li>先获取interface的reflect.Type，然后通过NumField进行遍历</li>
+<li>再通过reflect.Type的Field获取其<code>Field</code></li>
+<li>最后通过Field的Interface()得到对应的value</li>
+</ul>
+
+<p>通过运行结果可以得知获取未知类型的interface的所属方法（函数）的步骤为：</p>
+
+<ul>
+<li>先获取interface的reflect.Type，然后通过NumMethod进行遍历</li>
+<li>再分别通过reflect.Type的<code>Method</code>获取对应的真实的方法（函数）</li>
+<li>最后对结果取其Name和Type得知具体的方法名</li>
+<li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”
+struct 或者 struct 的嵌套都是一样的判断处理方式</li>
+</ul>
+
+<h4 id="通过reflect-value设置实际变量的值">通过reflect.Value设置实际变量的值</h4>
+
+<p>reflect.Value是通过reflect.ValueOf(X)获得的，只有当X是指针的时候，才可以通过reflec.Value修改实际变量X的值，即：要修改反射类型的对象就一定要保证其值是“addressable”的。</p>
+
+<pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;reflect&quot;
+)
+
+func main() {
+
+    var num float64 = 1.2345
+    fmt.Println(&quot;old value of pointer:&quot;, num)
+
+    // 通过reflect.ValueOf获取num中的reflect.Value，注意，参数必须是指针才能修改其值
+    pointer := reflect.ValueOf(&amp;num)
+    newValue := pointer.Elem()
+
+    fmt.Println(&quot;type of pointer:&quot;, newValue.Type())
+    fmt.Println(&quot;settability of pointer:&quot;, newValue.CanSet())
+
+    // 重新赋值
+    newValue.SetFloat(77)
+    fmt.Println(&quot;new value of pointer:&quot;, num)
+
+    ////////////////////
+    // 如果reflect.ValueOf的参数不是指针，会如何？
+    pointer = reflect.ValueOf(num)
+    //newValue = pointer.Elem() // 如果非指针，这里直接panic，“panic: reflect: call of reflect.Value.Elem on float64 Value”
+}
+
+运行结果：
+old value of pointer: 1.2345
+type of pointer: float64
+settability of pointer: true
+new value of pointer: 77
+</code></pre>
+
+<p>说明</p>
+
+<ul>
+<li>需要传入的参数是* float64这个指针，然后可以通过pointer.Elem()去获取所指向的Value，注意一定要是指针。</li>
+
+<li><p>如果传入的参数不是指针，而是变量，那么</p>
+
+<ul>
+<li>通过Elem获取原始值对应的对象则直接panic</li>
+<li>通过CanSet方法查询是否可以设置返回false</li>
+</ul></li>
+
+<li><p>newValue.CantSet()表示是否可以重新设置其值，如果输出的是true则可修改，否则不能修改，修改完之后再进行打印发现真的已经修改了。</p></li>
+
+<li><p>reflect.Value.Elem() 表示获取原始值对应的反射对象，只有原始对象才能修改，当前反射对象是不能修改的</p></li>
+
+<li><p>也就是说如果要修改反射类型对象，其值必须是“addressable”【对应的要传入的是指针，同时要通过Elem方法获取原始值对应的反射对象】</p></li>
+
+<li><p>struct 或者 struct 的嵌套都是一样的判断处理方式</p></li>
+</ul>
+
+<h4 id="通过reflect-valueof来进行方法的调用">通过reflect.ValueOf来进行方法的调用</h4>
+
+<p>这算是一个高级用法了，前面我们只说到对类型、变量的几种反射的用法，包括如何获取其值、其类型、如果重新设置新值。但是在工程应用中，另外一个常用并且属于高级的用法，就是通过reflect来进行方法【函数】的调用。比如我们要做框架工程的时候，需要可以随意扩展方法，或者说用户可以自定义方法，那么我们通过什么手段来扩展让用户能够自定义呢？关键点在于用户的自定义方法是未可知的，因此我们可以通过reflect来搞定</p>
+
+<pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;reflect&quot;
+)
+
+type User struct {
+    Id   int
+    Name string
+    Age  int
+}
+
+func (u User) ReflectCallFuncHasArgs(name string, age int) {
+    fmt.Println(&quot;ReflectCallFuncHasArgs name: &quot;, name, &quot;, age:&quot;, age, &quot;and origal User.Name:&quot;, u.Name)
+}
+
+func (u User) ReflectCallFuncNoArgs() {
+    fmt.Println(&quot;ReflectCallFuncNoArgs&quot;)
+}
+
+// 如何通过反射来进行方法的调用？
+// 本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调动mv.Call
+
+func main() {
+    user := User{1, &quot;Allen.Wu&quot;, 25}
+    
+    // 1. 要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理
+    getValue := reflect.ValueOf(user)
+
+    // 一定要指定参数为正确的方法名
+    // 2. 先看看带有参数的调用方法
+    methodValue := getValue.MethodByName(&quot;ReflectCallFuncHasArgs&quot;)
+    args := []reflect.Value{reflect.ValueOf(&quot;wudebao&quot;), reflect.ValueOf(30)}
+    methodValue.Call(args)
+
+    // 一定要指定参数为正确的方法名
+    // 3. 再看看无参数的调用方法
+    methodValue = getValue.MethodByName(&quot;ReflectCallFuncNoArgs&quot;)
+    args = make([]reflect.Value, 0)
+    methodValue.Call(args)
+}
+
+
+运行结果：
+ReflectCallFuncHasArgs name:  wudebao , age: 30 and origal User.Name: Allen.Wu
+ReflectCallFuncNoArgs
+</code></pre>
+
+<p>说明</p>
+
+<ul>
+<li>要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理</li>
+<li>reflect.Value.MethodByName这.MethodByName，需要指定准确真实的方法名字，如果错误将直接panic，MethodByName返回一个函数值对应的reflect.Value方法的名字。</li>
+<li>[]reflect.Value，这个是最终需要调用的方法的参数，可以没有或者一个或者多个，根据实际参数来定。</li>
+<li>reflect.Value的 Call 这个方法，这个方法将最终调用真实的方法，参数务必保持一致，如果reflect.Value&rsquo;Kind不是一个方法，那么将直接panic。</li>
+<li>本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调用methodValue.Call</li>
+</ul>
+
+<h4 id="json转码的例子">json转码的例子</h4>
+
+<h2 id="总结">总结</h2>
+
+<p>上述详细说明了Golang的反射reflect的各种功能和用法，都附带有相应的示例，相信能够在工程应用中进行相应实践，总结一下就是：</p>
+
+<ul>
+<li><p>反射可以大大提高程序的灵活性，使得interface{}有更大的发挥余地</p>
+
+<ul>
+<li>反射必须结合interface才玩得转</li>
+<li>变量的type要是concrete type的（也就是interface变量）才有反射一说</li>
+</ul></li>
+
+<li><p>反射可以将“接口类型变量”转换为“反射类型对象”</p>
+
+<ul>
+<li>反射使用 TypeOf 和 ValueOf 函数从接口中获取目标对象信息</li>
+</ul></li>
+
+<li><p>反射可以将“反射类型对象”转换为“接口类型变量</p>
+
+<ul>
+<li>reflect.value.Interface().(已知的类型)</li>
+<li>遍历reflect.Type的Field获取其Field</li>
+</ul></li>
+
+<li><p>反射可以修改反射类型对象，但是其值必须是“addressable”</p>
+
+<ul>
+<li>想要利用反射修改对象状态，前提是 interface.data 是 settable,即 pointer-interface</li>
+</ul></li>
+
+<li><p>通过反射可以“动态”调用方法</p></li>
+
+<li><p>因为Golang本身不支持模板，因此在以往需要使用模板的场景下往往就需要使用反射(reflect)来实现</p></li>
+</ul>
+
+<h2 id="参考链接">参考链接</h2>
+
+<p><a href="https://blog.golang.org/laws-of-reflection">https://blog.golang.org/laws-of-reflection</a><br />
+<a href="https://juejin.im/post/5a75a4fb5188257a82110544#heading-2">https://juejin.im/post/5a75a4fb5188257a82110544#heading-2</a><br />
+<a href="https://www.zhihu.com/question/28570203">https://www.zhihu.com/question/28570203</a></p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jayhong</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-03-05</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          <a href="https://jayhong.github.io/tags/golang/">golang</a>
+          <a href="https://jayhong.github.io/tags/blog/">blog</a>
+          <a href="https://jayhong.github.io/tags/%E5%8F%8D%E5%B0%84/">反射</a>
+          <a href="https://jayhong.github.io/tags/reflect/">reflect</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+          <a class="prev" href="/post/jane-theme-preview/">
+            
+            <i class="iconfont">
+              <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M691.908486 949.511495l75.369571-89.491197c10.963703-12.998035 10.285251-32.864502-1.499144-44.378743L479.499795 515.267417 757.434875 204.940602c11.338233-12.190647 11.035334-32.285311-0.638543-44.850487l-80.46666-86.564541c-11.680017-12.583596-30.356378-12.893658-41.662889-0.716314L257.233596 494.235404c-11.332093 12.183484-11.041474 32.266891 0.657986 44.844348l80.46666 86.564541c1.772366 1.910513 3.706415 3.533476 5.750981 4.877077l306.620399 321.703933C662.505829 963.726242 680.945807 962.528973 691.908486 949.511495z"></path>
+</svg>
+
+            </i>
+            <span class="prev-text nav-default">Jane Theme Preview</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        
+          <a class="next" href="/post/20190305%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%80%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/">
+            <span class="next-text nav-default">为什么开这个博客</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+
+  
+
+  
+  
+    
+
+
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="295157977@qq.com" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="http://github.com/jayhong" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="https://jayhong.github.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    2019
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        jayhong
+        
+      </span></span>
+
+  
+  
+    <span id="busuanzi_container">
+      访客数/访问量：<span id="busuanzi_value_site_uv"></span>/<span id="busuanzi_value_site_pv"></span>
+    </span>
+  
+
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.dee43230127a73d039a734510fa896c89c3c7ce0cf0be0c7a7433f8fd69b76dc.js" integrity="sha256-3uQyMBJ6c9A5pzRRD6iWyJw8fODPC&#43;DHp0M/j9abdtw=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
