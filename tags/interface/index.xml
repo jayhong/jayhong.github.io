@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>实现原理 on jayhong博客</title>
-    <link>https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
-    <description>Recent content in 实现原理 on jayhong博客</description>
+    <title>Interface on jayhong博客</title>
+    <link>https://jayhong.github.io/tags/interface/</link>
+    <description>Recent content in Interface on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <lastBuildDate>Wed, 13 Mar 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://jayhong.github.io/tags/interface/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -27,15 +27,6 @@
       
       <guid>https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/</guid>
       <description>interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了</description>
-    </item>
-    
-    <item>
-      <title>golang channel实现原理</title>
-      <link>https://jayhong.github.io/post/20190307-golang-channel-%E5%89%96%E6%9E%90/</link>
-      <pubDate>Thu, 07 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://jayhong.github.io/post/20190307-golang-channel-%E5%89%96%E6%9E%90/</guid>
-      <description>channel 要想理解 channel 要先知道 CSP 模型。CSP 是 Communicating Sequential Process 的简称，中文可以叫做通信顺序进程，是一种并发编程模型，由 Tony Hoare 于 1977 年提出。简单来说，CSP 模型由并发</description>
     </item>
     
   </channel>

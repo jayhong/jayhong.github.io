@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>golang interface 剖析 - jayhong博客</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="jayhong" />
+  <meta name="description" content="interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了" />
+
+  <meta name="keywords" content="jayhong, blog, golang" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0" />
+
+
+<link rel="canonical" href="https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/" />
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.19ae5a432863a072ec64433bb1020bd6d3401129f87d6f2ad5af3bcfd84168a1.css" integrity="sha256-Ga5aQyhjoHLsZEM7sQIL1tNAESn4fW8q1a87z9hBaKE=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="golang interface 剖析" />
+<meta property="og:description" content="interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/" />
+<meta property="article:published_time" content="2019-03-11T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-03-11T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="golang interface 剖析">
+<meta itemprop="description" content="interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了">
+
+
+<meta itemprop="datePublished" content="2019-03-11T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-03-11T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="3587">
+
+
+
+<meta itemprop="keywords" content="golang,blog,interface,实现原理," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="golang interface 剖析"/>
+<meta name="twitter:description" content="interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">jayhong博客</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      jayhong博客
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">golang interface 剖析</h1>
+      
+      <div class="post-meta">
+        <time datetime="2019-03-11" class="post-time">
+          2019-03-11
+        </time>
+        <div class="post-category">
+            <a href="https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"> golang基础知识 </a>
+            
+          </div>
+        <span class="more-meta"> 约 3587 字 </span>
+          <span class="more-meta"> 预计阅读 8 分钟 </span>
+
+        
+        
+          <span id="busuanzi_container_page_pv">
+            | 阅读 <span id="busuanzi_value_page_pv"></span>
+          </span>
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#interface-是什么">interface 是什么？</a></li>
+<li><a href="#为什么需要interface">为什么需要interface ?</a></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#参考链接">参考链接</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<h3 id="interface-是什么">interface 是什么？</h3>
+
+<p>interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。</p>
+
+<p>go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。</p>
+
+<p>如果一个类型实现了一个 interface 中所有方法，我们说类型实现了该 interface，
+所以所有类型都实现了 empty interface，因为任何一种类型至少实现了 0 个方法。go 没有显式的关键字用来实现 interface，只需要实现 interface 包含的方法即可。</p>
+
+<p>在 Gopher China 2017 的会上又有一个关于 interface 的 topic: (understanding golang interface(Gopher China))[<a href="https://www.youtube.com/watch?v=F4wUrj6pmSI&amp;t=2319s">https://www.youtube.com/watch?v=F4wUrj6pmSI&amp;t=2319s</a>] — youtube，
+作者是 Francesc。</p>
+
+<h3 id="为什么需要interface">为什么需要interface ?</h3>
+
+<ul>
+<li>1、泛型编程
+泛型编程是指实现一个方法可以用于多种不同的数据类型。
+在golang中是没有泛型编程的。golang中的泛型编程可以通过interface{} 进行实现.
+golang标准库中的sort<code>src/sort/sort.go</code> 就实现了类似于泛型编程的东西。</li>
+</ul>
+
+<pre><code>package sort
+
+// A type, typically a collection, that satisfies sort.Interface can be
+// sorted by the routines in this package.  The methods require that the
+// elements of the collection be enumerated by an integer index.
+type Interface interface {
+    // Len is the number of elements in the collection.
+    Len() int
+    // Less reports whether the element with
+    // index i should sort before the element with index j.
+    Less(i, j int) bool
+    // Swap swaps the elements with indexes i and j.
+    Swap(i, j int)
+}
+
+...
+
+// Sort sorts data.
+// It makes one call to data.Len to determine n, and O(n*log(n)) calls to
+// data.Less and data.Swap. The sort is not guaranteed to be stable.
+func Sort(data Interface) {
+    // Switch to heapsort if depth of 2*ceil(lg(n+1)) is reached.
+    n := data.Len()
+    maxDepth := 0
+    for i := n; i &gt; 0; i &gt;&gt;= 1 {
+        maxDepth++
+    }
+    maxDepth *= 2
+    quickSort(data, 0, n, maxDepth)
+}
+</code></pre>
+
+<p>任意的数据类型只要实现了sort的三个方法就可以调用sort方法进行排序。</p>
+
+<ul>
+<li>2、隐藏实现
+比如我设计一个函数给你返回一个 interface，那么你只能通过 interface 里面的方法来做一些操作，
+但是内部的具体实现是完全不知道的。Francesc 举了个 context 的例子。 context 最先由 google 提供，
+现在已经纳入了标准库，而且在原有 context 的基础上增加了：cancelCtx，timerCtx，valueCtx。
+语言的表达有时候略显苍白无力，看一下 context 包的代码吧。</li>
+</ul>
+
+<pre><code>func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
+    c := newCancelCtx(parent)
+    propagateCancel(parent, &amp;c)
+    return &amp;c, func() { c.cancel(true, Canceled) }
+}
+</code></pre>
+
+<p>表面上 WithCancel 函数返回的还是一个 Context interface，但是这个 interface 的具体实现是 cancelCtx struct。</p>
+
+<pre><code>// newCancelCtx returns an initialized cancelCtx.
+func newCancelCtx(parent Context) cancelCtx {
+    return cancelCtx{
+        Context: parent,
+        done:    make(chan struct{}),
+    }
+}
+
+// A cancelCtx can be canceled. When canceled, it also cancels any children
+// that implement canceler.
+type cancelCtx struct {
+    Context     //注意一下这个地方
+
+    done chan struct{} // closed by the first cancel call.
+    mu       sync.Mutex
+    children map[canceler]struct{} // set to nil by the first cancel call
+    err      error                 // set to non-nil by the first cancel call
+}
+
+func (c *cancelCtx) Done() &lt;-chan struct{} {
+    return c.done
+}
+
+func (c *cancelCtx) Err() error {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    return c.err
+}
+
+func (c *cancelCtx) String() string {
+    return fmt.Sprintf(&quot;%v.WithCancel&quot;, c.Context)
+}
+</code></pre>
+
+<p>尽管内部实现上下面三个函数返回的具体 struct （都实现了 Context interface）不同，但是对于使用者来说是完全无感知的。</p>
+
+<pre><code>func WithCancel(parent Context) (ctx Context, cancel CancelFunc)    //返回 cancelCtx
+func WithDeadline(parent Context, deadline time.Time) (Context, CancelFunc) //返回 timerCtx
+func WithValue(parent Context, key, val interface{}) Context    //返回 valueCtx
+</code></pre>
+
+<ul>
+<li>3、providing interception points
+这个的意思估计就是提供埋点
+```
+type header struct {
+rt  http.RoundTripper
+v   map[string]string
+}</li>
+</ul>
+
+<p>func (h header) RoundTrip(r *http.Request) *http.Response {
+    for k, v := range h.v {
+        r.Header.Set(k,v)
+    }
+    return h.rt.RoundTrip&reg;
+}</p>
+
+<pre><code>目前opentracing 官方提供的库就用到了这个。在http的接口加多了一个中间件
+https://github.com/opentracing-contrib/go-stdlib/blob/master/nethttp/server.go#L111
+
+
+### interface 源码剖析
+interface 在golang中是由两个结构体实现的，一个是eface 一个是iface
+#### eface
+eface在`runtime/runtime2.go` 中定义
+
+</code></pre>
+
+<p>// src/runtime/runtime2.go
+// 空接口
+type eface struct {
+    _type *_type
+    data  unsafe.Pointer
+}</p>
+
+<pre><code>
+空接口(eface)有两个域，所指向对象的类型信息(_type)和数据指针(data)。先看看_type字段：
+
+</code></pre>
+
+<p>/ 所有类型信息结构体的公共部分
+// src/rumtime/runtime2.go
+type _type struct {
+    size       uintptr         // 类型的大小
+    ptrdata    uintptr      // size of memory prefix holding all pointers
+    hash       uint32          // 类型的Hash值
+    tflag      tflag              // 类型的Tags
+    align      uint8       // 结构体内对齐
+    fieldalign uint8       // 结构体作为field时的对齐
+    kind       uint8       // 类型编号 定义于runtime/typekind.go
+    alg        *typeAlg    // 类型元方法 存储hash和equal两个操作。map key便使用key的_type.alg.hash(k)获取hash值
+    gcdata    *byte            // GC相关信息
+    str       nameOff   // 类型名字的偏移<br />
+    ptrToThis typeOff<br />
+}</p>
+
+<pre><code>
+_type是go所有类型的公共描述，里面包含GC，反射等需要的细节，它决定data应该如何解释和操作，这也是它和C void*不同之处。
+各个类型所需要的类型描述是不一样的，比如chan，除了chan本身外，还需要描述其元素类型，而map则需要key类型信息和value类型信息等:
+
+</code></pre>
+
+<p>/ src/runtime/type.go
+// ptrType represents a pointer type.
+type ptrType struct {
+   typ     _type   // 指针类型
+   elem  *_type // 指针所指向的元素类型
+}
+type chantype struct {
+    typ  _type        // channel类型
+    elem *_type     // channel元素类型
+    dir  uintptr
+}
+type maptype struct {
+    typ           _type
+    key           *_type
+    elem          *_type
+    bucket        *_type // internal type representing a hash bucket
+    hmap          *_type // internal type representing a hmap
+    keysize       uint8  // size of key slot
+    indirectkey   bool   // store ptr to key instead of key itself
+    valuesize     uint8  // size of value slot
+    indirectvalue bool   // store ptr to value instead of value itself
+    bucketsize    uint16 // size of bucket
+    reflexivekey  bool   // true if k==k for all keys
+    needkeyupdate bool   // true if we need to update key on an overwrite
+}</p>
+
+<pre><code>
+这些类型信息的第一个字段都是_type(类型本身的信息)，接下来是一堆类型需要的其它详细信息(如子类型信息)，这样在进行类型相关操作时，
+可通过一个字(typ *_type)即可表述所有类型，然后再通过_type.kind可解析出其具体类型，最后通过地址转换即可得到类型完整的”_type树”，参考reflect.Type.Elem()函数:
+
+</code></pre>
+
+<p>// reflect/type.go
+// reflect.rtype结构体定义和runtime._type一致  type.kind定义也一致(为了分包而重复定义)
+// Elem()获取rtype中的元素类型，只针对复合类型(Array, Chan, Map, Ptr, Slice)有效
+func (t *rtype) Elem() Type {
+   switch t.Kind() {
+   case Array:
+      tt := (*arrayType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Chan:
+      tt := (*chanType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Map:
+      // 对Map来讲，Elem()得到的是其Value类型
+      // 可通过rtype.Key()得到Key类型
+      tt := (*mapType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Ptr:
+      tt := (*ptrType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Slice:
+      tt := (*sliceType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   }
+   panic(&ldquo;reflect: Elem of invalid type&rdquo;)
+}</p>
+
+<pre><code>
+#### iface
+
+</code></pre>
+
+<p>// runtime/runtime2.go
+// 非空接口
+type iface struct {
+    tab  *itab
+    data unsafe.Pointer
+}</p>
+
+<p>// 非空接口的类型信息
+type itab struct {
+    inter  *interfacetype    // 接口定义的类型信息
+    _type  *_type                // 接口实际指向值的类型信息
+    link   *itab<br />
+    bad    int32
+    inhash int32
+    fun    [1]uintptr             // 接口方法实现列表，即函数地址列表，按字典序排序
+}</p>
+
+<p>// runtime/type.go
+// 非空接口类型，接口定义，包路径等。
+type interfacetype struct {
+   typ     _type
+   pkgpath name
+   mhdr    []imethod      // 接口方法声明列表，按字典序排序
+}</p>
+
+<p>// 接口的方法声明
+type imethod struct {
+   name nameOff          // 方法名
+   ityp typeOff                // 描述方法参数返回值等细节
+}</p>
+
+<pre><code>
+非空接口(iface)本身除了可以容纳满足其接口的对象之外，还需要保存其接口的方法，因此除了data字段，iface通过tab字段描述非空接口的细节
+，包括接口方法定义，接口方法实现地址，接口所指类型等。iface是非空接口的实现，而不是类型定义，iface的真正类型为interfacetype，其第一个字段仍然为描述其自身类型的_type字段。
+
+为了提高查找效率，runtime中实现(interface_type, concrete_type) -&gt; itab(包含具体方法实现地址等信息)的hash表:
+
+</code></pre>
+
+<p>// runtime/iface.go
+const (
+   hashSize = 1009
+)</p>
+
+<p>var (
+   ifaceLock mutex // lock for accessing hash
+   hash      [hashSize]*itab
+)
+// 简单的Hash算法
+func itabhash(inter *interfacetype, typ *_type) uint32 {
+   h := inter.typ.hash
+   h += 17 * typ.hash
+   return h % hashSize
+}</p>
+
+<p>// 根据interface_type和concrete_type获取或生成itab信息
+func getitab(inter *interfacetype, typ *_type, canfail bool) *itab {
+   &hellip;
+    // 算出hash key
+   h := itabhash(inter, typ)</p>
+
+<p>var m *itab
+   &hellip;
+           // 遍历hash slot链表
+      for m = (*itab)(atomic.Loadp(unsafe.Pointer(&amp;hash[h]))); m != nil; m = m.link {
+         // 如果在hash表中找到则返回
+         if m.inter == inter &amp;&amp; m._type == typ {
+            if m.bad {
+               if !canfail {
+                  additab(m, locked != 0, false)
+               }
+               m = nil
+            }
+            &hellip;
+            return m
+         }
+      }
+   }
+    // 如果没有找到，则尝试生成itab(会检查是否满足接口)
+   m = (*itab)(persistentalloc(unsafe.Sizeof(itab{})+uintptr(len(inter.mhdr)-1)*sys.PtrSize, 0, &amp;memstats.other_sys))
+   m.inter = inter
+   m._type = typ
+   additab(m, true, canfail)
+   if m.bad {
+      return nil
+   }
+   return m
+}</p>
+
+<p>// 检查concrete_type是否符合interface_type 并且创建对应的itab结构体 将其放到hash表中
+func additab(m *itab, locked, canfail bool) {
+   inter := m.inter
+   typ := m._type
+   x := typ.uncommon()</p>
+
+<p>ni := len(inter.mhdr)
+   nt := int(x.mcount)
+   xmhdr := (*[1 &lt;&lt; 16]method)(add(unsafe.Pointer(x), uintptr(x.moff)))[:nt:nt]
+   j := 0
+   for k := 0; k &lt; ni; k++ {
+      i := &amp;inter.mhdr[k]
+      itype := inter.typ.typeOff(i.ityp)
+      name := inter.typ.nameOff(i.name)
+      iname := name.name()
+      ipkg := name.pkgPath()
+      if ipkg == &ldquo;&rdquo; {
+         ipkg = inter.pkgpath.name()
+      }
+      for ; j &lt; nt; j++ {
+         t := &amp;xmhdr[j]
+         tname := typ.nameOff(t.name)
+         // 检查方法名字是否一致
+         if typ.typeOff(t.mtyp) == itype &amp;&amp; tname.name() == iname {
+            pkgPath := tname.pkgPath()
+            if pkgPath == &ldquo;&rdquo; {
+               pkgPath = typ.nameOff(x.pkgpath).name()
+            }
+            // 是否导出或在同一个包
+            if tname.isExported() || pkgPath == ipkg {
+               if m != nil {
+                    // 获取函数地址，并加入到itab.fun数组中
+                  ifn := typ.textOff(t.ifn)
+                  *(*unsafe.Pointer)(add(unsafe.Pointer(&amp;m.fun[0]), uintptr(k)*sys.PtrSize)) = ifn
+               }
+               goto nextimethod
+            }
+         }
+      }
+      // didn&rsquo;t find method
+      if !canfail {
+         if locked {
+            unlock(&amp;ifaceLock)
+         }
+         panic(&amp;TypeAssertionError{&ldquo;&rdquo;, typ.string(), inter.typ.string(), iname})
+      }
+      m.bad = true
+      break
+   nextimethod:
+   }
+   if !locked {
+      throw(&ldquo;invalid itab locking&rdquo;)
+   }
+   // 加到Hash Slot链表中
+   h := itabhash(inter, typ)
+   m.link = hash[h]
+   m.inhash = true
+   atomicstorep(unsafe.Pointer(&amp;hash[h]), unsafe.Pointer(m))
+}</p>
+
+<pre><code>
+### 接口赋值
+</code></pre>
+
+<p>package main</p>
+
+<p>import (
+    &ldquo;fmt&rdquo;
+)</p>
+
+<p>type MyInterface interface {
+    Print()
+}</p>
+
+<p>type MyStruct struct{}
+func (ms MyStruct) Print() {}</p>
+
+<p>func main() {
+    x := 1
+    var y interface{} = x
+    var s MyStruct
+    var t MyInterface = s
+    fmt.Println(y, z)
+}</p>
+
+<pre><code>
+代码 17 行 var y interface{} = x 调用了函数 runtime.convT2E ，将 int 类型的 x 转换成 empty interface。
+代码 19 行 var t MyInterface = s 将 MyStruct 类型转换成 non-empty interface: MyInterface
+
+</code></pre>
+
+<p>func convT2E(t *_type, elem unsafe.Pointer) (e eface) {
+    &hellip;</p>
+
+<pre><code>x := newobject(t)
+typedmemmove(t, x, elem)
+e._type = t
+e.data = x
+return
+</code></pre>
+
+<p>}</p>
+
+<p>func convT2I(tab *itab, elem unsafe.Pointer) (i iface) {
+    t := tab._type</p>
+
+<pre><code>...
+
+x := newobject(t)
+typedmemmove(t, x, elem)
+i.tab = tab
+i.data = x
+return
+</code></pre>
+
+<p>}</p>
+
+<pre><code>
+看上面的函数原型，可以看出中间过程编译器将根据我们的转换目标类型的 empty interface 还是 non-empty interface，
+来对原数据类型进行转换（转换成 &lt;*_type, unsafe.Pointer&gt; 或者 &lt;*itab, unsafe.Pointer&gt;）。这里对于 struct 满不
+满足 interface 的类型要求（也就是 struct 是否实现了 interface 的所有 method），是由编译器来检测的。
+
+### Type Assertion
+</code></pre>
+
+<p>// The assertXXX functions may fail (either panicking or returning false,
+// depending on whether they are 1-result or 2-result).
+func assertI2I(inter *interfacetype, i iface) (r iface) {
+    tab := i.tab
+    if tab == nil {
+        // explicit conversions require non-nil interface value.
+        panic(&amp;TypeAssertionError{&ldquo;&rdquo;, &ldquo;&rdquo;, inter.typ.string(), &ldquo;&rdquo;})
+    }
+    if tab.inter == inter {
+        r.tab = tab
+        r.data = i.data
+        return
+    }
+    r.tab = getitab(inter, tab._type, false)
+    r.data = i.data
+    return
+}
+func assertI2I2(inter *interfacetype, i iface) (r iface, b bool) {
+    tab := i.tab
+    if tab == nil {
+        return
+    }
+    if tab.inter != inter {
+        tab = getitab(inter, tab._type, true)
+        if tab == nil {
+            return
+        }
+    }
+    r.tab = tab
+    r.data = i.data
+    b = true
+    return
+}</p>
+
+<p>// 类似
+func assertE2I(inter *interfacetype, e eface) (r iface)
+func assertE2I2(inter *interfacetype, e eface) (r iface, b bool)
+```</p>
+
+<h3 id="总结">总结</h3>
+
+<p>interface 是有两个结构体组成的iface 和eface，eface是有一个_type和指针构成，iface是有itab 和指针构成
+iface里面有_type 和 方法列表哈希值
+接口的赋值是通过convT2I convT2E assertE2I 来实现的</p>
+
+<h3 id="参考链接">参考链接</h3>
+
+<p><a href="https://github.com/golang/go/wiki/InterfaceSlice">https://github.com/golang/go/wiki/InterfaceSlice</a><br />
+<a href="https://sanyuesha.com/2017/07/22/how-to-understand-go-interface/">https://sanyuesha.com/2017/07/22/how-to-understand-go-interface/</a><br />
+<a href="http://legendtkl.com/2017/07/01/golang-interface-implement/">http://legendtkl.com/2017/07/01/golang-interface-implement/</a><br />
+<a href="http://legendtkl.com/2017/06/12/understanding-golang-interface/">http://legendtkl.com/2017/06/12/understanding-golang-interface/</a><br />
+<a href="https://i6448038.github.io/2018/10/01/Golang-interface/">https://i6448038.github.io/2018/10/01/Golang-interface/</a><br />
+<a href="http://wudaijun.com/2018/01/go-interface-implement/">http://wudaijun.com/2018/01/go-interface-implement/</a></p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jayhong</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-03-11</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          <a href="https://jayhong.github.io/tags/golang/">golang</a>
+          <a href="https://jayhong.github.io/tags/blog/">blog</a>
+          <a href="https://jayhong.github.io/tags/interface/">interface</a>
+          <a href="https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">实现原理</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+          <a class="prev" href="/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/">
+            
+            <i class="iconfont">
+              <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M691.908486 949.511495l75.369571-89.491197c10.963703-12.998035 10.285251-32.864502-1.499144-44.378743L479.499795 515.267417 757.434875 204.940602c11.338233-12.190647 11.035334-32.285311-0.638543-44.850487l-80.46666-86.564541c-11.680017-12.583596-30.356378-12.893658-41.662889-0.716314L257.233596 494.235404c-11.332093 12.183484-11.041474 32.266891 0.657986 44.844348l80.46666 86.564541c1.772366 1.910513 3.706415 3.533476 5.750981 4.877077l306.620399 321.703933C662.505829 963.726242 680.945807 962.528973 691.908486 949.511495z"></path>
+</svg>
+
+            </i>
+            <span class="prev-text nav-default">golang reflect 剖析</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        
+          <a class="next" href="/post/20190307-golang-channel-%E5%89%96%E6%9E%90/">
+            <span class="next-text nav-default">golang channel实现原理</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+
+  
+
+  
+  
+    
+
+
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="295157977@qq.com" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="http://github.com/jayhong" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="https://jayhong.github.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    2019
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        jayhong
+        
+      </span></span>
+
+  
+  
+    <span id="busuanzi_container">
+      访客数/访问量：<span id="busuanzi_value_site_uv"></span>/<span id="busuanzi_value_site_pv"></span>
+    </span>
+  
+
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.dee43230127a73d039a734510fa896c89c3c7ce0cf0be0c7a7433f8fd69b76dc.js" integrity="sha256-3uQyMBJ6c9A5pzRRD6iWyJw8fODPC&#43;DHp0M/j9abdtw=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

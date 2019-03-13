@@ -6,18 +6,36 @@
     <description>Recent content in Posts on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 07 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 13 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://jayhong.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>golang reflect 剖析</title>
+      <link>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</link>
+      <pubDate>Wed, 13 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</guid>
+      <description>http://legendtkl.com/2017/07/01/golang-interface-implement/ http://legendtkl.com/2017/06/12/understanding-golang-interface/ http://wudaijun.com/2018/01/go-interface-implement/</description>
+    </item>
+    
+    <item>
+      <title>golang interface 剖析</title>
+      <link>https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/</link>
+      <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/</guid>
+      <description>interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了</description>
+    </item>
+    
+    <item>
       <title>golang channel实现原理</title>
-      <link>https://jayhong.github.io/post/20190307-golang-channel-%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/</link>
+      <link>https://jayhong.github.io/post/20190307-golang-channel-%E5%89%96%E6%9E%90/</link>
       <pubDate>Thu, 07 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190307-golang-channel-%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/</guid>
-      <description>channel golang 使用了channel实现了CSP并发编程模型，下面将从源码的角度来分析channel，首先会先看下channel支持的操作，然后再分析这</description>
+      <guid>https://jayhong.github.io/post/20190307-golang-channel-%E5%89%96%E6%9E%90/</guid>
+      <description>channel 要想理解 channel 要先知道 CSP 模型。CSP 是 Communicating Sequential Process 的简称，中文可以叫做通信顺序进程，是一种并发编程模型，由 Tony Hoare 于 1977 年提出。简单来说，CSP 模型由并发</description>
     </item>
     
     <item>
@@ -36,17 +54,6 @@
       
       <guid>https://jayhong.github.io/post/20190305-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%80%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/</guid>
       <description>从什么时候开始写博客 其实早在我还没有毕业的时候，就已经有写一些博客。当时是写在csdn上面，说起来也是搞笑，因为写的文件里面会带一些引用的链</description>
-    </item>
-    
-    <item>
-      <title>Jane Theme Preview</title>
-      <link>https://jayhong.github.io/post/jane-theme-preview/</link>
-      <pubDate>Mon, 01 Jan 2018 16:01:23 +0800</pubDate>
-      
-      <guid>https://jayhong.github.io/post/jane-theme-preview/</guid>
-      <description>&lt;p&gt;&lt;strong&gt;Markdown&lt;/strong&gt; is created by &lt;a href=&#34;http://daringfireball.net/&#34;&gt;Daring Fireball&lt;/a&gt;, the original guideline is &lt;a href=&#34;http://daringfireball.net/projects/markdown/syntax&#34;&gt;here&lt;/a&gt;. Its syntax, however, varies between different parsers or editors.&lt;/p&gt;
-
-&lt;p&gt;Please note that HTML fragments in markdown source will be recognized but not parsed or rendered. Also, there may be small reformatting on the original markdown source code after saving.&lt;/p&gt;</description>
     </item>
     
   </channel>
