@@ -70,7 +70,7 @@
 
 <meta itemprop="datePublished" content="2019-03-11T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-03-11T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="3587">
+<meta itemprop="wordCount" content="4653">
 
 
 
@@ -299,8 +299,8 @@
             <a href="https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"> golang基础知识 </a>
             
           </div>
-        <span class="more-meta"> 约 3587 字 </span>
-          <span class="more-meta"> 预计阅读 8 分钟 </span>
+        <span class="more-meta"> 约 4653 字 </span>
+          <span class="more-meta"> 预计阅读 10 分钟 </span>
 
         
         
@@ -323,13 +323,22 @@
 <ul>
 <li>
 <ul>
-<li>
-<ul>
 <li><a href="#interface-是什么">interface 是什么？</a></li>
-<li><a href="#为什么需要interface">为什么需要interface ?</a></li>
+<li><a href="#为什么需要interface">为什么需要interface ?</a>
+<ul>
+<li><a href="#1-泛型编程">1、泛型编程</a></li>
+<li><a href="#2-隐藏实现">2、隐藏实现</a></li>
+<li><a href="#3-providing-interception-points">3、providing interception points</a></li>
+<li><a href="#interface-源码剖析">interface 源码剖析</a>
+<ul>
+<li><a href="#eface">eface</a></li>
+<li><a href="#iface">iface</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#接口赋值">接口赋值</a></li>
+<li><a href="#type-assertion">Type Assertion</a></li>
 <li><a href="#总结">总结</a></li>
 <li><a href="#参考链接">参考链接</a></li>
-</ul></li>
 </ul></li>
 </ul>
 </nav>
@@ -340,7 +349,7 @@
     <div class="post-content">
       
 
-<h3 id="interface-是什么">interface 是什么？</h3>
+<h2 id="interface-是什么">interface 是什么？</h2>
 
 <p>interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。</p>
 
@@ -349,70 +358,144 @@
 <p>如果一个类型实现了一个 interface 中所有方法，我们说类型实现了该 interface，
 所以所有类型都实现了 empty interface，因为任何一种类型至少实现了 0 个方法。go 没有显式的关键字用来实现 interface，只需要实现 interface 包含的方法即可。</p>
 
-<p>在 Gopher China 2017 的会上又有一个关于 interface 的 topic: (understanding golang interface(Gopher China))[<a href="https://www.youtube.com/watch?v=F4wUrj6pmSI&amp;t=2319s">https://www.youtube.com/watch?v=F4wUrj6pmSI&amp;t=2319s</a>] — youtube，
+<p>在 Gopher China 2017 的会上又有一个关于 interface 的 topic: <a href="https://www.youtube.com/watch?v=F4wUrj6pmSI&amp;t=2319s">understanding golang interface(Gopher China)</a> — youtube，
 作者是 Francesc。</p>
 
-<h3 id="为什么需要interface">为什么需要interface ?</h3>
+<h2 id="为什么需要interface">为什么需要interface ?</h2>
 
-<ul>
-<li>1、泛型编程
-泛型编程是指实现一个方法可以用于多种不同的数据类型。
+<h3 id="1-泛型编程">1、泛型编程</h3>
+
+<p>泛型编程是指实现一个方法可以用于多种不同的数据类型。
 在golang中是没有泛型编程的。golang中的泛型编程可以通过interface{} 进行实现.
-golang标准库中的sort<code>src/sort/sort.go</code> 就实现了类似于泛型编程的东西。</li>
-</ul>
+golang标准库中的sort<code>src/sort/sort.go</code> 就实现了类似于泛型编程的东西。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-golang" data-lang="golang"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-golang" data-lang="golang"><span class="kn">package</span> <span class="nx">sort</span>
 
-<pre><code>package sort
+<span class="c1">// A type, typically a collection, that satisfies sort.Interface can be
+</span><span class="c1">// sorted by the routines in this package.  The methods require that the
+</span><span class="c1">// elements of the collection be enumerated by an integer index.
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">Interface</span> <span class="kd">interface</span> <span class="p">{</span>
+    <span class="c1">// Len is the number of elements in the collection.
+</span><span class="c1"></span>    <span class="nf">Len</span><span class="p">()</span> <span class="kt">int</span>
+    <span class="c1">// Less reports whether the element with
+</span><span class="c1"></span>    <span class="c1">// index i should sort before the element with index j.
+</span><span class="c1"></span>    <span class="nf">Less</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">bool</span>
+    <span class="c1">// Swap swaps the elements with indexes i and j.
+</span><span class="c1"></span>    <span class="nf">Swap</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="kt">int</span><span class="p">)</span>
+<span class="p">}</span>
 
-// A type, typically a collection, that satisfies sort.Interface can be
-// sorted by the routines in this package.  The methods require that the
-// elements of the collection be enumerated by an integer index.
-type Interface interface {
-    // Len is the number of elements in the collection.
-    Len() int
-    // Less reports whether the element with
-    // index i should sort before the element with index j.
-    Less(i, j int) bool
-    // Swap swaps the elements with indexes i and j.
-    Swap(i, j int)
-}
+<span class="o">...</span>
 
-...
-
-// Sort sorts data.
-// It makes one call to data.Len to determine n, and O(n*log(n)) calls to
-// data.Less and data.Swap. The sort is not guaranteed to be stable.
-func Sort(data Interface) {
-    // Switch to heapsort if depth of 2*ceil(lg(n+1)) is reached.
-    n := data.Len()
-    maxDepth := 0
-    for i := n; i &gt; 0; i &gt;&gt;= 1 {
-        maxDepth++
-    }
-    maxDepth *= 2
-    quickSort(data, 0, n, maxDepth)
-}
-</code></pre>
-
+<span class="c1">// Sort sorts data.
+</span><span class="c1">// It makes one call to data.Len to determine n, and O(n*log(n)) calls to
+</span><span class="c1">// data.Less and data.Swap. The sort is not guaranteed to be stable.
+</span><span class="c1"></span><span class="kd">func</span> <span class="nf">Sort</span><span class="p">(</span><span class="nx">data</span> <span class="nx">Interface</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Switch to heapsort if depth of 2*ceil(lg(n+1)) is reached.
+</span><span class="c1"></span>    <span class="nx">n</span> <span class="o">:=</span> <span class="nx">data</span><span class="p">.</span><span class="nf">Len</span><span class="p">()</span>
+    <span class="nx">maxDepth</span> <span class="o">:=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&gt;</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span> <span class="p">{</span>
+        <span class="nx">maxDepth</span><span class="o">++</span>
+    <span class="p">}</span>
+    <span class="nx">maxDepth</span> <span class="o">*=</span> <span class="mi">2</span>
+    <span class="nf">quickSort</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">n</span><span class="p">,</span> <span class="nx">maxDepth</span><span class="p">)</span>
+<span class="p">}</span></code></pre></td></tr></table>
+</div>
+</div>
 <p>任意的数据类型只要实现了sort的三个方法就可以调用sort方法进行排序。</p>
 
-<ul>
-<li>2、隐藏实现
-比如我设计一个函数给你返回一个 interface，那么你只能通过 interface 里面的方法来做一些操作，
+<h3 id="2-隐藏实现">2、隐藏实现</h3>
+
+<p>比如我设计一个函数给你返回一个 interface，那么你只能通过 interface 里面的方法来做一些操作，
 但是内部的具体实现是完全不知道的。Francesc 举了个 context 的例子。 context 最先由 google 提供，
 现在已经纳入了标准库，而且在原有 context 的基础上增加了：cancelCtx，timerCtx，valueCtx。
-语言的表达有时候略显苍白无力，看一下 context 包的代码吧。</li>
-</ul>
-
-<pre><code>func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
+语言的表达有时候略显苍白无力，看一下 context 包的代码吧。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
     c := newCancelCtx(parent)
     propagateCancel(parent, &amp;c)
     return &amp;c, func() { c.cancel(true, Canceled) }
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <p>表面上 WithCancel 函数返回的还是一个 Context interface，但是这个 interface 的具体实现是 cancelCtx struct。</p>
-
-<pre><code>// newCancelCtx returns an initialized cancelCtx.
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// newCancelCtx returns an initialized cancelCtx.
 func newCancelCtx(parent Context) cancelCtx {
     return cancelCtx{
         Context: parent,
@@ -442,83 +525,154 @@ func (c *cancelCtx) Err() error {
 }
 
 func (c *cancelCtx) String() string {
-    return fmt.Sprintf(&quot;%v.WithCancel&quot;, c.Context)
-}
-</code></pre>
-
+    return fmt.Sprintf(&#34;%v.WithCancel&#34;, c.Context)
+}</pre></td></tr></table>
+</div>
+</div>
 <p>尽管内部实现上下面三个函数返回的具体 struct （都实现了 Context interface）不同，但是对于使用者来说是完全无感知的。</p>
-
-<pre><code>func WithCancel(parent Context) (ctx Context, cancel CancelFunc)    //返回 cancelCtx
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func WithCancel(parent Context) (ctx Context, cancel CancelFunc)    //返回 cancelCtx
 func WithDeadline(parent Context, deadline time.Time) (Context, CancelFunc) //返回 timerCtx
-func WithValue(parent Context, key, val interface{}) Context    //返回 valueCtx
-</code></pre>
+func WithValue(parent Context, key, val interface{}) Context    //返回 valueCtx</pre></td></tr></table>
+</div>
+</div>
+<h3 id="3-providing-interception-points">3、providing interception points</h3>
 
-<ul>
-<li>3、providing interception points
-这个的意思估计就是提供埋点
-```
-type header struct {
-rt  http.RoundTripper
-v   map[string]string
-}</li>
-</ul>
+<p>就是可以在已经实现的接口中，封装多一层，实现类似于装饰器的东西</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">type header struct {
+    rt  http.RoundTripper
+    v   map[string]string
+}
 
-<p>func (h header) RoundTrip(r *http.Request) *http.Response {
+func (h header) RoundTrip(r *http.Request) *http.Response {
     for k, v := range h.v {
         r.Header.Set(k,v)
     }
-    return h.rt.RoundTrip&reg;
-}</p>
+    return h.rt.RoundTrip(r)
+}</pre></td></tr></table>
+</div>
+</div>
+<p>目前opentracing 官方提供的库就用到了这个。在http的接口加多了一个中间件
+<a href="https://github.com/opentracing-contrib/go-stdlib/blob/master/nethttp/server.go#L111">go-stdlib</a></p>
 
-<pre><code>目前opentracing 官方提供的库就用到了这个。在http的接口加多了一个中间件
-https://github.com/opentracing-contrib/go-stdlib/blob/master/nethttp/server.go#L111
+<h3 id="interface-源码剖析">interface 源码剖析</h3>
 
+<p>interface 在golang中是由两个结构体实现的，一个是eface 一个是iface</p>
 
-### interface 源码剖析
-interface 在golang中是由两个结构体实现的，一个是eface 一个是iface
-#### eface
-eface在`runtime/runtime2.go` 中定义
+<h4 id="eface">eface</h4>
 
-</code></pre>
-
-<p>// src/runtime/runtime2.go
+<p>eface在<code>runtime/runtime2.go</code> 中定义</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// src/runtime/runtime2.go
 // 空接口
 type eface struct {
     _type *_type
     data  unsafe.Pointer
-}</p>
-
-<pre><code>
-空接口(eface)有两个域，所指向对象的类型信息(_type)和数据指针(data)。先看看_type字段：
-
-</code></pre>
-
-<p>/ 所有类型信息结构体的公共部分
+}</pre></td></tr></table>
+</div>
+</div>
+<p>空接口(eface)有两个域，所指向对象的类型信息(_type)和数据指针(data)。先看看_type字段：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/ 所有类型信息结构体的公共部分
 // src/rumtime/runtime2.go
 type _type struct {
     size       uintptr         // 类型的大小
     ptrdata    uintptr      // size of memory prefix holding all pointers
     hash       uint32          // 类型的Hash值
-    tflag      tflag              // 类型的Tags
+    tflag      tflag              // 类型的Tags 
     align      uint8       // 结构体内对齐
     fieldalign uint8       // 结构体作为field时的对齐
     kind       uint8       // 类型编号 定义于runtime/typekind.go
     alg        *typeAlg    // 类型元方法 存储hash和equal两个操作。map key便使用key的_type.alg.hash(k)获取hash值
     gcdata    *byte            // GC相关信息
-    str       nameOff   // 类型名字的偏移<br />
-    ptrToThis typeOff<br />
-}</p>
-
-<pre><code>
-_type是go所有类型的公共描述，里面包含GC，反射等需要的细节，它决定data应该如何解释和操作，这也是它和C void*不同之处。
-各个类型所需要的类型描述是不一样的，比如chan，除了chan本身外，还需要描述其元素类型，而map则需要key类型信息和value类型信息等:
-
-</code></pre>
-
-<p>/ src/runtime/type.go
+    str       nameOff   // 类型名字的偏移    
+    ptrToThis typeOff    
+}</pre></td></tr></table>
+</div>
+</div>
+<p>_type是go所有类型的公共描述，里面包含GC，反射等需要的细节，它决定data应该如何解释和操作，这也是它和C void*不同之处。
+各个类型所需要的类型描述是不一样的，比如chan，除了chan本身外，还需要描述其元素类型，而map则需要key类型信息和value类型信息等:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/ src/runtime/type.go
 // ptrType represents a pointer type.
 type ptrType struct {
-   typ     _type   // 指针类型
+   typ     _type   // 指针类型 
    elem  *_type // 指针所指向的元素类型
 }
 type chantype struct {
@@ -539,15 +693,41 @@ type maptype struct {
     bucketsize    uint16 // size of bucket
     reflexivekey  bool   // true if k==k for all keys
     needkeyupdate bool   // true if we need to update key on an overwrite
-}</p>
-
-<pre><code>
-这些类型信息的第一个字段都是_type(类型本身的信息)，接下来是一堆类型需要的其它详细信息(如子类型信息)，这样在进行类型相关操作时，
-可通过一个字(typ *_type)即可表述所有类型，然后再通过_type.kind可解析出其具体类型，最后通过地址转换即可得到类型完整的”_type树”，参考reflect.Type.Elem()函数:
-
-</code></pre>
-
-<p>// reflect/type.go
+}</pre></td></tr></table>
+</div>
+</div>
+<p>这些类型信息的第一个字段都是_type(类型本身的信息)，接下来是一堆类型需要的其它详细信息(如子类型信息)，这样在进行类型相关操作时，
+可通过一个字(typ *_type)即可表述所有类型，然后再通过_type.kind可解析出其具体类型，最后通过地址转换即可得到类型完整的”_type树”，参考reflect.Type.Elem()函数:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// reflect/type.go
 // reflect.rtype结构体定义和runtime._type一致  type.kind定义也一致(为了分包而重复定义)
 // Elem()获取rtype中的元素类型，只针对复合类型(Array, Chan, Map, Ptr, Slice)有效
 func (t *rtype) Elem() Type {
@@ -570,59 +750,201 @@ func (t *rtype) Elem() Type {
       tt := (*sliceType)(unsafe.Pointer(t))
       return toType(tt.elem)
    }
-   panic(&ldquo;reflect: Elem of invalid type&rdquo;)
-}</p>
-
-<pre><code>
-#### iface
-
-</code></pre>
-
-<p>// runtime/runtime2.go
+   panic(&#34;reflect: Elem of invalid type&#34;)
+}</pre></td></tr></table>
+</div>
+</div>
+<h4 id="iface">iface</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// runtime/runtime2.go
 // 非空接口
 type iface struct {
     tab  *itab
     data unsafe.Pointer
-}</p>
+}
 
-<p>// 非空接口的类型信息
+// 非空接口的类型信息
 type itab struct {
     inter  *interfacetype    // 接口定义的类型信息
     _type  *_type                // 接口实际指向值的类型信息
-    link   *itab<br />
+    link   *itab  
     bad    int32
     inhash int32
     fun    [1]uintptr             // 接口方法实现列表，即函数地址列表，按字典序排序
-}</p>
+}
 
-<p>// runtime/type.go
+// runtime/type.go
 // 非空接口类型，接口定义，包路径等。
 type interfacetype struct {
    typ     _type
    pkgpath name
    mhdr    []imethod      // 接口方法声明列表，按字典序排序
-}</p>
+}
 
-<p>// 接口的方法声明
+// 接口的方法声明 
 type imethod struct {
    name nameOff          // 方法名
    ityp typeOff                // 描述方法参数返回值等细节
-}</p>
+}</pre></td></tr></table>
+</div>
+</div>
+<p>非空接口(iface)本身除了可以容纳满足其接口的对象之外，还需要保存其接口的方法，因此除了data字段，iface通过tab字段描述非空接口的细节
+，包括接口方法定义，接口方法实现地址，接口所指类型等。iface是非空接口的实现，而不是类型定义，iface的真正类型为interfacetype，其第一个字段仍然为描述其自身类型的_type字段。</p>
 
-<pre><code>
-非空接口(iface)本身除了可以容纳满足其接口的对象之外，还需要保存其接口的方法，因此除了data字段，iface通过tab字段描述非空接口的细节
-，包括接口方法定义，接口方法实现地址，接口所指类型等。iface是非空接口的实现，而不是类型定义，iface的真正类型为interfacetype，其第一个字段仍然为描述其自身类型的_type字段。
-
-为了提高查找效率，runtime中实现(interface_type, concrete_type) -&gt; itab(包含具体方法实现地址等信息)的hash表:
-
-</code></pre>
-
-<p>// runtime/iface.go
+<p>为了提高查找效率，runtime中实现(interface_type, concrete_type) -&gt; itab(包含具体方法实现地址等信息)的hash表:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// runtime/iface.go
 const (
    hashSize = 1009
-)</p>
+)
 
-<p>var (
+var (
    ifaceLock mutex // lock for accessing hash
    hash      [hashSize]*itab
 )
@@ -631,16 +953,17 @@ func itabhash(inter *interfacetype, typ *_type) uint32 {
    h := inter.typ.hash
    h += 17 * typ.hash
    return h % hashSize
-}</p>
+}
 
-<p>// 根据interface_type和concrete_type获取或生成itab信息
+// 根据interface_type和concrete_type获取或生成itab信息
 func getitab(inter *interfacetype, typ *_type, canfail bool) *itab {
-   &hellip;
+   ...
     // 算出hash key
-   h := itabhash(inter, typ)</p>
+   h := itabhash(inter, typ)
 
-<p>var m *itab
-   &hellip;
+
+   var m *itab
+   ...
            // 遍历hash slot链表
       for m = (*itab)(atomic.Loadp(unsafe.Pointer(&amp;hash[h]))); m != nil; m = m.link {
          // 如果在hash表中找到则返回
@@ -651,7 +974,7 @@ func getitab(inter *interfacetype, typ *_type, canfail bool) *itab {
                }
                m = nil
             }
-            &hellip;
+            ...
             return m
          }
       }
@@ -665,15 +988,15 @@ func getitab(inter *interfacetype, typ *_type, canfail bool) *itab {
       return nil
    }
    return m
-}</p>
+}
 
-<p>// 检查concrete_type是否符合interface_type 并且创建对应的itab结构体 将其放到hash表中
+// 检查concrete_type是否符合interface_type 并且创建对应的itab结构体 将其放到hash表中
 func additab(m *itab, locked, canfail bool) {
    inter := m.inter
    typ := m._type
-   x := typ.uncommon()</p>
+   x := typ.uncommon()
 
-<p>ni := len(inter.mhdr)
+   ni := len(inter.mhdr)
    nt := int(x.mcount)
    xmhdr := (*[1 &lt;&lt; 16]method)(add(unsafe.Pointer(x), uintptr(x.moff)))[:nt:nt]
    j := 0
@@ -683,7 +1006,7 @@ func additab(m *itab, locked, canfail bool) {
       name := inter.typ.nameOff(i.name)
       iname := name.name()
       ipkg := name.pkgPath()
-      if ipkg == &ldquo;&rdquo; {
+      if ipkg == &#34;&#34; {
          ipkg = inter.pkgpath.name()
       }
       for ; j &lt; nt; j++ {
@@ -692,7 +1015,7 @@ func additab(m *itab, locked, canfail bool) {
          // 检查方法名字是否一致
          if typ.typeOff(t.mtyp) == itype &amp;&amp; tname.name() == iname {
             pkgPath := tname.pkgPath()
-            if pkgPath == &ldquo;&rdquo; {
+            if pkgPath == &#34;&#34; {
                pkgPath = typ.nameOff(x.pkgpath).name()
             }
             // 是否导出或在同一个包
@@ -706,99 +1029,180 @@ func additab(m *itab, locked, canfail bool) {
             }
          }
       }
-      // didn&rsquo;t find method
+      // didn&#39;t find method
       if !canfail {
          if locked {
             unlock(&amp;ifaceLock)
          }
-         panic(&amp;TypeAssertionError{&ldquo;&rdquo;, typ.string(), inter.typ.string(), iname})
+         panic(&amp;TypeAssertionError{&#34;&#34;, typ.string(), inter.typ.string(), iname})
       }
       m.bad = true
       break
    nextimethod:
    }
    if !locked {
-      throw(&ldquo;invalid itab locking&rdquo;)
+      throw(&#34;invalid itab locking&#34;)
    }
    // 加到Hash Slot链表中
    h := itabhash(inter, typ)
    m.link = hash[h]
    m.inhash = true
    atomicstorep(unsafe.Pointer(&amp;hash[h]), unsafe.Pointer(m))
-}</p>
+}</pre></td></tr></table>
+</div>
+</div>
+<h2 id="接口赋值">接口赋值</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
 
-<pre><code>
-### 接口赋值
-</code></pre>
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&#34;fmt&#34;</span>
+<span class="p">)</span>
 
-<p>package main</p>
+<span class="kd">type</span> <span class="nx">MyInterface</span> <span class="kd">interface</span> <span class="p">{</span>
+    <span class="nf">Print</span><span class="p">()</span>
+<span class="p">}</span>
 
-<p>import (
-    &ldquo;fmt&rdquo;
-)</p>
+<span class="kd">type</span> <span class="nx">MyStruct</span> <span class="kd">struct</span><span class="p">{}</span>
+<span class="kd">func</span> <span class="p">(</span><span class="nx">ms</span> <span class="nx">MyStruct</span><span class="p">)</span> <span class="nf">Print</span><span class="p">()</span> <span class="p">{}</span>
 
-<p>type MyInterface interface {
-    Print()
-}</p>
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">x</span> <span class="o">:=</span> <span class="mi">1</span>
+    <span class="kd">var</span> <span class="nx">y</span> <span class="kd">interface</span><span class="p">{}</span> <span class="p">=</span> <span class="nx">x</span>
+    <span class="kd">var</span> <span class="nx">s</span> <span class="nx">MyStruct</span>
+    <span class="kd">var</span> <span class="nx">t</span> <span class="nx">MyInterface</span> <span class="p">=</span> <span class="nx">s</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">y</span><span class="p">,</span> <span class="nx">z</span><span class="p">)</span>
+<span class="p">}</span></pre></td></tr></table>
+</div>
+</div>
+<p>代码 17 行 var y interface{} = x 调用了函数 runtime.convT2E ，将 int 类型的 x 转换成 empty interface。
+代码 19 行 var t MyInterface = s 调用了函数 runtime.convT2I ，将 MyStruct 类型转换成 non-empty interface: MyInterface</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func convT2E(t *_type, elem unsafe.Pointer) (e eface) {
+    ...
+  
+    x := newobject(t)
+    typedmemmove(t, x, elem)
+    e._type = t
+    e.data = x
+    return
+}
 
-<p>type MyStruct struct{}
-func (ms MyStruct) Print() {}</p>
-
-<p>func main() {
-    x := 1
-    var y interface{} = x
-    var s MyStruct
-    var t MyInterface = s
-    fmt.Println(y, z)
-}</p>
-
-<pre><code>
-代码 17 行 var y interface{} = x 调用了函数 runtime.convT2E ，将 int 类型的 x 转换成 empty interface。
-代码 19 行 var t MyInterface = s 将 MyStruct 类型转换成 non-empty interface: MyInterface
-
-</code></pre>
-
-<p>func convT2E(t *_type, elem unsafe.Pointer) (e eface) {
-    &hellip;</p>
-
-<pre><code>x := newobject(t)
-typedmemmove(t, x, elem)
-e._type = t
-e.data = x
-return
-</code></pre>
-
-<p>}</p>
-
-<p>func convT2I(tab *itab, elem unsafe.Pointer) (i iface) {
-    t := tab._type</p>
-
-<pre><code>...
-
-x := newobject(t)
-typedmemmove(t, x, elem)
-i.tab = tab
-i.data = x
-return
-</code></pre>
-
-<p>}</p>
-
-<pre><code>
-看上面的函数原型，可以看出中间过程编译器将根据我们的转换目标类型的 empty interface 还是 non-empty interface，
+func convT2I(tab *itab, elem unsafe.Pointer) (i iface) {
+    t := tab._type
+    
+    ...
+  
+    x := newobject(t)
+    typedmemmove(t, x, elem)
+    i.tab = tab
+    i.data = x
+    return
+}</pre></td></tr></table>
+</div>
+</div>
+<p>看上面的函数原型，可以看出中间过程编译器将根据我们的转换目标类型的 empty interface 还是 non-empty interface，
 来对原数据类型进行转换（转换成 &lt;*_type, unsafe.Pointer&gt; 或者 &lt;*itab, unsafe.Pointer&gt;）。这里对于 struct 满不
-满足 interface 的类型要求（也就是 struct 是否实现了 interface 的所有 method），是由编译器来检测的。
+满足 interface 的类型要求（也就是 struct 是否实现了 interface 的所有 method），是由编译器来检测的。</p>
 
-### Type Assertion
-</code></pre>
+<h2 id="type-assertion">Type Assertion</h2>
 
-<p>// The assertXXX functions may fail (either panicking or returning false,
+<p>断言的话是通过getiatb实现的，getitab会计算</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// The assertXXX functions may fail (either panicking or returning false,
 // depending on whether they are 1-result or 2-result).
 func assertI2I(inter *interfacetype, i iface) (r iface) {
     tab := i.tab
     if tab == nil {
         // explicit conversions require non-nil interface value.
-        panic(&amp;TypeAssertionError{&ldquo;&rdquo;, &ldquo;&rdquo;, inter.typ.string(), &ldquo;&rdquo;})
+        panic(&amp;TypeAssertionError{&#34;&#34;, &#34;&#34;, inter.typ.string(), &#34;&#34;})
     }
     if tab.inter == inter {
         r.tab = tab
@@ -824,20 +1228,246 @@ func assertI2I2(inter *interfacetype, i iface) (r iface, b bool) {
     r.data = i.data
     b = true
     return
-}</p>
+}
 
-<p>// 类似
+// 类似
 func assertE2I(inter *interfacetype, e eface) (r iface)
-func assertE2I2(inter *interfacetype, e eface) (r iface, b bool)
-```</p>
+func assertE2I2(inter *interfacetype, e eface) (r iface, b bool)</pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// runtime/iface.go
+const (
+   hashSize = 1009
+)
 
-<h3 id="总结">总结</h3>
+var (
+   ifaceLock mutex // lock for accessing hash
+   hash      [hashSize]*itab
+)
+// 简单的Hash算法
+func itabhash(inter *interfacetype, typ *_type) uint32 {
+   h := inter.typ.hash
+   h += 17 * typ.hash
+   return h % hashSize
+}
+
+// 根据interface_type和concrete_type获取或生成itab信息
+func getitab(inter *interfacetype, typ *_type, canfail bool) *itab {
+   ...
+    // 算出hash key
+   h := itabhash(inter, typ)
+
+
+   var m *itab
+   ...
+           // 遍历hash slot链表
+      for m = (*itab)(atomic.Loadp(unsafe.Pointer(&amp;hash[h]))); m != nil; m = m.link {
+         // 如果在hash表中找到则返回
+         if m.inter == inter &amp;&amp; m._type == typ {
+            if m.bad {
+               if !canfail {
+                  additab(m, locked != 0, false)
+               }
+               m = nil
+            }
+            ...
+            return m
+         }
+      }
+   }
+    // 如果没有找到，则尝试生成itab(会检查是否满足接口)
+   m = (*itab)(persistentalloc(unsafe.Sizeof(itab{})+uintptr(len(inter.mhdr)-1)*sys.PtrSize, 0, &amp;memstats.other_sys))
+   m.inter = inter
+   m._type = typ
+   additab(m, true, canfail)
+   if m.bad {
+      return nil
+   }
+   return m
+}
+
+// 检查concrete_type是否符合interface_type 并且创建对应的itab结构体 将其放到hash表中
+func additab(m *itab, locked, canfail bool) {
+   inter := m.inter
+   typ := m._type
+   x := typ.uncommon()
+
+   ni := len(inter.mhdr)
+   nt := int(x.mcount)
+   xmhdr := (*[1 &lt;&lt; 16]method)(add(unsafe.Pointer(x), uintptr(x.moff)))[:nt:nt]
+   j := 0
+   for k := 0; k &lt; ni; k++ {
+      i := &amp;inter.mhdr[k]
+      itype := inter.typ.typeOff(i.ityp)
+      name := inter.typ.nameOff(i.name)
+      iname := name.name()
+      ipkg := name.pkgPath()
+      if ipkg == &#34;&#34; {
+         ipkg = inter.pkgpath.name()
+      }
+      for ; j &lt; nt; j++ {
+         t := &amp;xmhdr[j]
+         tname := typ.nameOff(t.name)
+         // 检查方法名字是否一致
+         if typ.typeOff(t.mtyp) == itype &amp;&amp; tname.name() == iname {
+            pkgPath := tname.pkgPath()
+            if pkgPath == &#34;&#34; {
+               pkgPath = typ.nameOff(x.pkgpath).name()
+            }
+            // 是否导出或在同一个包
+            if tname.isExported() || pkgPath == ipkg {
+               if m != nil {
+                    // 获取函数地址，并加入到itab.fun数组中
+                  ifn := typ.textOff(t.ifn)
+                  *(*unsafe.Pointer)(add(unsafe.Pointer(&amp;m.fun[0]), uintptr(k)*sys.PtrSize)) = ifn
+               }
+               goto nextimethod
+            }
+         }
+      }
+      // didn&#39;t find method
+      if !canfail {
+         if locked {
+            unlock(&amp;ifaceLock)
+         }
+         panic(&amp;TypeAssertionError{&#34;&#34;, typ.string(), inter.typ.string(), iname})
+      }
+      m.bad = true
+      break
+   nextimethod:
+   }
+   if !locked {
+      throw(&#34;invalid itab locking&#34;)
+   }
+   // 加到Hash Slot链表中
+   h := itabhash(inter, typ)
+   m.link = hash[h]
+   m.inhash = true
+   atomicstorep(unsafe.Pointer(&amp;hash[h]), unsafe.Pointer(m))
+}</pre></td></tr></table>
+</div>
+</div>
+<h2 id="总结">总结</h2>
 
 <p>interface 是有两个结构体组成的iface 和eface，eface是有一个_type和指针构成，iface是有itab 和指针构成
 iface里面有_type 和 方法列表哈希值
-接口的赋值是通过convT2I convT2E assertE2I 来实现的</p>
+接口的赋值是通过convT2I convT2E 来实现的
+接口的断言是通过assertE2I 来实现的</p>
 
-<h3 id="参考链接">参考链接</h3>
+<h2 id="参考链接">参考链接</h2>
 
 <p><a href="https://github.com/golang/go/wiki/InterfaceSlice">https://github.com/golang/go/wiki/InterfaceSlice</a><br />
 <a href="https://sanyuesha.com/2017/07/22/how-to-understand-go-interface/">https://sanyuesha.com/2017/07/22/how-to-understand-go-interface/</a><br />

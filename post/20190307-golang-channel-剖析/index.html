@@ -70,7 +70,7 @@
 
 <meta itemprop="datePublished" content="2019-03-07T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-03-07T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="4500">
+<meta itemprop="wordCount" content="5112">
 
 
 
@@ -299,8 +299,8 @@
             <a href="https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"> golang基础知识 </a>
             
           </div>
-        <span class="more-meta"> 约 4500 字 </span>
-          <span class="more-meta"> 预计阅读 9 分钟 </span>
+        <span class="more-meta"> 约 5112 字 </span>
+          <span class="more-meta"> 预计阅读 11 分钟 </span>
 
         
         
@@ -373,37 +373,70 @@
 
 <ul>
 <li><p>chan分为阻塞式的和非阻塞类的chan</p>
-
-<pre><code>//创建一个阻塞类chan
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">//创建一个阻塞类chan
 ch := make(chan int)
 //创建一个非阻塞类chan
-ch := make(chan int， 9)
-</code></pre></li>
+ch := make(chan int， 9)</pre></td></tr></table>
+</div>
+</div></li>
 
 <li><p>往chan写数据</p>
-
-<pre><code>ch &lt;- 1
-</code></pre></li>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">ch &lt;- 1</pre></td></tr></table>
+</div>
+</div></li>
 
 <li><p>从chan中读数据</p>
-
-<pre><code>a := &lt;- ch
-</code></pre></li>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">a := &lt;- ch</pre></td></tr></table>
+</div>
+</div></li>
 
 <li><p>关闭 channel</p>
-
-<pre><code>close(ch)
-</code></pre></li>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">close(ch)</pre></td></tr></table>
+</div>
+</div></li>
 
 <li><p>查看chan的cap 和len</p>
-
-<pre><code>func main() {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func main() {
 ch := make(chan int, 100)
 ch &lt;- 1
 fmt.Println(len(ch)) // 1
 fmt.Println(cap(ch)) // 100
-}
-</code></pre></li>
+}</pre></td></tr></table>
+</div>
+</div></li>
 
 <li><p>goroutine 通信</p></li>
 
@@ -426,22 +459,44 @@ fmt.Println(cap(ch)) // 100
 <li>关闭一个已经关闭的chan会导致panic</li>
 
 <li><p>关闭chan会退出循环</p>
-
-<pre><code> func main() {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"> func main() {
     ch := make(chan int, 100)
     for elem := range ch { // 主要就是这里的 for range...
         fmt.Println(i)
     }
- }
-</code></pre></li>
+ }</pre></td></tr></table>
+</div>
+</div></li>
 
 <li><p>往关闭的chan发送数据会导致panic</p></li>
 
 <li><p>如果 close channel 时，有 sender goroutine 挂在 channel 的阻塞发送队列中，
 会导致 panic：close 一个 channel 会唤醒所有等待在该 channel 上的 g，并使其进入 Grunnable 状态，
 这时这些 writer goroutine 会发现该 channel 已经是 closed 状态，就 panic了。</p>
-
-<pre><code> func main() {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"> func main() {
     ch := make(chan int)
     go func() { ch &lt;- 1 }() // panic: send on closed channel
     time.Sleep(time.Second)
@@ -449,24 +504,35 @@ fmt.Println(cap(ch)) // 100
     time.Sleep(time.Second)
     x, ok := &lt;-ch
     fmt.Println(x, ok)
- }
-</code></pre></li>
+ }</pre></td></tr></table>
+</div>
+</div></li>
 
 <li><p>可以从已经 closed 的 channel 中接收值，如果 channel 中有值，这里特指带 buffer 的 channel，那么就从 channel 中取，如果没有值，那么会返回 channel 元素的 0 值。
 区分是返回的零值还是 buffer 中的值可使用 comma, ok 语法</p>
-
-<pre><code>//若 ok 为 false，表明 channel 已被关闭，所得的是无效的值
-x, ok := &lt;-ch
-</code></pre></li>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">//若 ok 为 false，表明 channel 已被关闭，所得的是无效的值
+x, ok := &lt;-ch</pre></td></tr></table>
+</div>
+</div></li>
 </ul>
 
 <h4 id="nil-chan">nil chan</h4>
 
 <p>不进行初始化，即不调用 make 来赋值的 channel 称为 nil channel</p>
-
-<pre><code> var a chan int
-</code></pre>
-
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"> var a chan int</pre></td></tr></table>
+</div>
+</div>
 <p>关闭一个nil的chan会导致panic</p>
 
 <h4 id="close-principle">close principle</h4>
@@ -478,8 +544,59 @@ x, ok := &lt;-ch
 <h4 id="hchan-struct">hchan struct</h4>
 
 <p>chan的底层就是hchan</p>
-
-<pre><code>type hchan struct {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">type hchan struct {
     qcount   uint           // 队列中数据个数
     dataqsiz uint           // channel 大小
     buf      unsafe.Pointer // 存放数据的环形数组
@@ -494,7 +611,7 @@ x, ok := &lt;-ch
     // lock protects all fields in hchan, as well as several
     // fields in sudogs blocked on this channel.
     //
-    // Do not change another G's status while holding this lock
+    // Do not change another G&#39;s status while holding this lock
     // (in particular, do not ready a G), as this can deadlock
     // with stack shrinking.
     lock mutex
@@ -526,28 +643,73 @@ type sudog struct {
     waitlink    *sudog // g.waiting list or semaRoot
     waittail    *sudog // semaRoot
     c           *hchan // channel
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <p>channel 其实就是一个队列加一个锁，只不过这个锁是一个轻量级锁。其中 recvq 是读操作阻塞在 channel 的 goroutine 列表，
  sendq 是写操作阻塞在 channel 的 goroutine 列表。列表的实现是 sudog，其实就是一个对 g 的结构的封装</p>
 
 <h4 id="make-channel">make channel</h4>
 
 <p>通过 make 创建 channel 对应的代码如下</p>
-
-<pre><code>func makechan(t *chantype, size int64) *hchan {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func makechan(t *chantype, size int64) *hchan {
     elem := t.elem
 
     // compiler checks this but be safe.
     if elem.size &gt;= 1&lt;&lt;16 {
-        throw(&quot;makechan: invalid channel element type&quot;)
+        throw(&#34;makechan: invalid channel element type&#34;)
     }
     if hchanSize%maxAlign != 0 || elem.align &gt; maxAlign {
-        throw(&quot;makechan: bad alignment&quot;)
+        throw(&#34;makechan: bad alignment&#34;)
     }
     if size &lt; 0 || int64(uintptr(size)) != size || (elem.size &gt; 0 &amp;&amp; uintptr(size) &gt; (_MaxMem-hchanSize)/elem.size) {
-        panic(plainError(&quot;makechan: size out of range&quot;))
+        panic(plainError(&#34;makechan: size out of range&#34;))
     }
 
     var c *hchan
@@ -555,7 +717,7 @@ type sudog struct {
         // Allocate memory in one call.
         // Hchan does not contain pointers interesting for GC in this case:
         // buf points into the same allocation, elemtype is persistent.
-        // SudoG's are referenced from their owning thread so they can't be collected.
+        // SudoG&#39;s are referenced from their owning thread so they can&#39;t be collected.
         // TODO(dvyukov,rlh): Rethink when collector can move allocated objects.
         c = (*hchan)(mallocgc(hchanSize+uintptr(size)*elem.size, nil, true))
         if size &gt; 0 &amp;&amp; elem.size != 0 {
@@ -574,24 +736,42 @@ type sudog struct {
     c.dataqsiz = uint(size)
 
     if debugChan {
-        print(&quot;makechan: chan=&quot;, c, &quot;; elemsize=&quot;, elem.size, &quot;; elemalg=&quot;, elem.alg, &quot;; dataqsiz=&quot;, size, &quot;\n&quot;)
+        print(&#34;makechan: chan=&#34;, c, &#34;; elemsize=&#34;, elem.size, &#34;; elemalg=&#34;, elem.alg, &#34;; dataqsiz=&#34;, size, &#34;\n&#34;)
     }
     return c
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <p>最前面的两个 if 是一些异常判断：元素类型大小限制和对齐限制。第三个 if 也很明显，判断 size 大小是否小于 0 或者过大。
 <code>int64(uintptr(size)) != size</code>这句也是判断 size 是否为负。值得一说的是最后面的判断条件</p>
 
 <p>_MaxMem 是 Arena 区域的最大值，用来分配给堆的。也就是说 channel 是在堆上分配的。</p>
 
 <p>再往下就可以看到分配的代码了。如果 channel 内数据类型不含有指针且 size &gt; 0，则将其分配在连续的内存区域。如果 size = 0，实际上 buf 是不分配空间的。</p>
-
-<pre><code>if elem.kind&amp;kindNoPointers != 0 || size == 0 {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">if elem.kind&amp;kindNoPointers != 0 || size == 0 {
     // Allocate memory in one call.
     // Hchan does not contain pointers interesting for GC in this case:
     // buf points into the same allocation, elemtype is persistent.
-    // SudoG's are referenced from their owning thread so they can't be collected.
+    // SudoG&#39;s are referenced from their owning thread so they can&#39;t be collected.
     // TODO(dvyukov,rlh): Rethink when collector can move allocated objects.
     c = (*hchan)(mallocgc(hchanSize+uintptr(size)*elem.size, nil, true))
     if size &gt; 0 &amp;&amp; elem.size != 0 {
@@ -601,17 +781,24 @@ type sudog struct {
         // Also prevents us from pointing beyond the allocation (see issue 9401).
         c.buf = unsafe.Pointer(c)
     }
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <p>除了上面的情况，剩下的，也就是 size &gt; 0，channel 和 channel.buf 是分别进行分配的。剩下的代码是剩下字段的处理。</p>
-
-<pre><code>else {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">else {
         c = new(hchan)
         c.buf = newarray(elem, int(size))   // newarray 也是调用 mallocgc 进行内存分配
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <blockquote>
 <p>go 1.10的代码，if else 使用switch 重写了</p>
 </blockquote>
@@ -619,8 +806,111 @@ type sudog struct {
 <h4 id="send">send</h4>
 
 <p>send 也就是 ch &lt;- x，对应的函数如下</p>
-
-<pre><code>// entry point for c &lt;- x from compiled code
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// entry point for c &lt;- x from compiled code
 //go:nosplit
 func chansend1(c *hchan, elem unsafe.Pointer) {
     chansend(c, elem, true, getcallerpc(unsafe.Pointer(&amp;c)))
@@ -631,8 +921,8 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
         if !block {
             return false
         }
-        gopark(nil, nil, &quot;chan send (nil chan)&quot;, traceEvGoStop, 2)
-        throw(&quot;unreachable&quot;)
+        gopark(nil, nil, &#34;chan send (nil chan)&#34;, traceEvGoStop, 2)
+        throw(&#34;unreachable&#34;)
     }
     ...
     
@@ -650,7 +940,7 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 
     if c.closed != 0 {
         unlock(&amp;c.lock)
-        panic(plainError(&quot;send on closed channel&quot;))
+        panic(plainError(&#34;send on closed channel&#34;))
     }
 
     if sg := c.recvq.dequeue(); sg != nil {
@@ -699,18 +989,18 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
     gp.waiting = mysg
     gp.param = nil
     c.sendq.enqueue(mysg)
-    goparkunlock(&amp;c.lock, &quot;chan send&quot;, traceEvGoBlockSend, 3)
+    goparkunlock(&amp;c.lock, &#34;chan send&#34;, traceEvGoBlockSend, 3)
 
     // someone woke us up.
     if mysg != gp.waiting {
-        throw(&quot;G waiting list is corrupted&quot;)
+        throw(&#34;G waiting list is corrupted&#34;)
     }
     gp.waiting = nil
     if gp.param == nil {
         if c.closed == 0 {
-            throw(&quot;chansend: spurious wakeup&quot;)
+            throw(&#34;chansend: spurious wakeup&#34;)
         }
-        panic(plainError(&quot;send on closed channel&quot;))
+        panic(plainError(&#34;send on closed channel&#34;))
     }
     gp.param = nil
     if mysg.releasetime &gt; 0 {
@@ -719,43 +1009,69 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
     mysg.c = nil
     releaseSudog(mysg)
     return true
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <h5 id="nil-channel">nil channel</h5>
 
 <p>先来看一下 nil channel 的情况，也就是向没有 make 的 channel 发送数据。上篇文章 深入理解 Go Channel 中留了一个问题：向 nil channel 发送数据会报 fatal error: all goroutines are asleep - deadlock! 错误。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-golang" data-lang="golang"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-golang" data-lang="golang"><span class="k">if</span> <span class="nx">c</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+    <span class="nf">gopark</span><span class="p">(</span><span class="kc">nil</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="s">&#34;chan send (nil chan)&#34;</span><span class="p">,</span> <span class="nx">traceEvGoStop</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nf">throw</span><span class="p">(</span><span class="s">&#34;unreachable&#34;</span><span class="p">)</span>
+<span class="p">}</span>
 
-<pre><code class="language-golang">if c == nil {
-    gopark(nil, nil, &quot;chan send (nil chan)&quot;, traceEvGoStop, 2)
-    throw(&quot;unreachable&quot;)
-}
-
-//runtime/trace.go
-traceEvGoStop            = 16 // goroutine stops (like in select{}) [timestamp, stack]
-
-//runtime/proc.go
-// Puts the current goroutine into a waiting state and calls unlockf.
-// If unlockf returns false, the goroutine is resumed.
-// unlockf must not access this G's stack, as it may be moved between
-// the call to gopark and the call to unlockf.
-func gopark(unlockf func(*g, unsafe.Pointer) bool, lock unsafe.Pointer, reason string, traceEv byte, traceskip int) {}
-</code></pre>
-
+<span class="c1">//runtime/trace.go
+</span><span class="c1"></span><span class="nx">traceEvGoStop</span>            <span class="p">=</span> <span class="mi">16</span> <span class="c1">// goroutine stops (like in select{}) [timestamp, stack]
+</span><span class="c1"></span>
+<span class="c1">//runtime/proc.go
+</span><span class="c1">// Puts the current goroutine into a waiting state and calls unlockf.
+</span><span class="c1">// If unlockf returns false, the goroutine is resumed.
+</span><span class="c1">// unlockf must not access this G&#39;s stack, as it may be moved between
+</span><span class="c1">// the call to gopark and the call to unlockf.
+</span><span class="c1"></span><span class="kd">func</span> <span class="nf">gopark</span><span class="p">(</span><span class="nx">unlockf</span> <span class="kd">func</span><span class="p">(</span><span class="o">*</span><span class="nx">g</span><span class="p">,</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">)</span> <span class="kt">bool</span><span class="p">,</span> <span class="nx">lock</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span><span class="p">,</span> <span class="nx">reason</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">traceEv</span> <span class="kt">byte</span><span class="p">,</span> <span class="nx">traceskip</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{}</span></code></pre></td></tr></table>
+</div>
+</div>
 <p>gopark 会将当前 goroutine 休眠，然后通过 unlockf 来唤醒，注意我们上面传入的 unlockf 是 nil，也就是向 nil channel 发送数据的 goroutine 会一直休眠。同理，从 nil channel 读数据也是一样的处理。我们再看一眼上一篇文章的例子。</p>
 
 <h5 id="closed-channel">closed channel</h5>
 
 <p>向 close 的 channel 发送数据，直接 panic。</p>
-
-<pre><code>lock(&amp;c.lock)
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">lock(&amp;c.lock)
 
 if c.closed != 0 {
     unlock(&amp;c.lock)
-    panic(plainError(&quot;send on closed channel&quot;))
-}
-</code></pre>
-
+    panic(plainError(&#34;send on closed channel&#34;))
+}</pre></td></tr></table>
+</div>
+</div>
 <h5 id="发送数据处理">发送数据处理</h5>
 
 <p>发送数据分三种情况：</p>
@@ -767,8 +1083,40 @@ if c.closed != 0 {
 </ul>
 
 <p>第一种情况如下。从当前 channel 的等待队列中取出等待的 goroutine，然后调用 send。goready 负责唤醒 goroutine。</p>
-
-<pre><code>lock(&amp;c.lock)
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">lock(&amp;c.lock)
 
 if sg := c.recvq.dequeue(); sg != nil {
     // Found a waiting receiver. We pass the value we want to send
@@ -782,7 +1130,7 @@ if sg := c.recvq.dequeue(); sg != nil {
 // The receiver is then woken up to go on its merry way.
 // Channel c must be empty and locked.  send unlocks c with unlockf.
 // sg must already be dequeued from c.
-// ep must be non-nil and point to the heap or the caller's stack.
+// ep must be non-nil and point to the heap or the caller&#39;s stack.
 func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
     ... 
     if sg.elem != nil {
@@ -796,12 +1144,33 @@ func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
         sg.releasetime = cputicks()
     }
     goready(gp, skip+1)
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <p>第二种情况比较简单。通过比较 qcount 和 dataqsiz 来判断 hchan.buf 是否还有可用空间。除此之后还需要调整一下 sendx 和 qcount。</p>
-
-<pre><code>lock(&amp;c.lock)
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">lock(&amp;c.lock)
 
 if c.qcount &lt; c.dataqsiz {
     // Space is available in the channel buffer. Enqueue the element to send.
@@ -818,12 +1187,32 @@ if c.qcount &lt; c.dataqsiz {
     c.qcount++
     unlock(&amp;c.lock)
     return true
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <p>第三种情况如下</p>
-
-<pre><code>// Block on the channel. Some receiver will complete our operation for us.
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// Block on the channel. Some receiver will complete our operation for us.
 gp := getg()
 mysg := acquireSudog()
 mysg.releasetime = 0
@@ -839,32 +1228,60 @@ mysg.c = c
 gp.waiting = mysg
 gp.param = nil
 c.sendq.enqueue(mysg)   // 当前 goroutine 如等待队列
-goparkunlock(&amp;c.lock, &quot;chan send&quot;, traceEvGoBlockSend, 3)   //休眠
-</code></pre>
-
+goparkunlock(&amp;c.lock, &#34;chan send&#34;, traceEvGoBlockSend, 3)   //休眠</pre></td></tr></table>
+</div>
+</div>
 <h4 id="recv">recv</h4>
 
 <p>读取 channel （ &lt;-c ）和发送的情况非常类似</p>
 
 <h5 id="nil-channel-1">nil channel</h5>
-
-<pre><code>func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool) {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool) {
     if c == nil {
         if !block {
             return
         }
-        gopark(nil, nil, &quot;chan receive (nil chan)&quot;, traceEvGoStop, 2)
-        throw(&quot;unreachable&quot;)
+        gopark(nil, nil, &#34;chan receive (nil chan)&#34;, traceEvGoStop, 2)
+        throw(&#34;unreachable&#34;)
     }
     ...
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <h5 id="closed-channel-1">closed channel</h5>
 
 <p>从 closed channel 接收数据，如果 channel 中还有数据，接着走下面的流程。如果已经没有数据了，则返回默认值。使用 ok-idiom 方式读取的时候，第二个参数返回 false</p>
-
-<pre><code>lock(&amp;c.lock)
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">lock(&amp;c.lock)
 
 if c.closed != 0 &amp;&amp; c.qcount == 0 {
     if raceenabled {
@@ -875,12 +1292,216 @@ if c.closed != 0 &amp;&amp; c.qcount == 0 {
         typedmemclr(c.elemtype, ep)
     }
     return true, false
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <h5 id="接收数据处理">接收数据处理</h5>
-
-<pre><code>// entry points for &lt;- c from compiled code
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span><span class="lnt">190
+</span><span class="lnt">191
+</span><span class="lnt">192
+</span><span class="lnt">193
+</span><span class="lnt">194
+</span><span class="lnt">195
+</span><span class="lnt">196
+</span><span class="lnt">197
+</span><span class="lnt">198
+</span><span class="lnt">199
+</span><span class="lnt">200
+</span><span class="lnt">201
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// entry points for &lt;- c from compiled code
 //go:nosplit
 func chanrecv1(c *hchan, elem unsafe.Pointer) {
     chanrecv(c, elem, true)
@@ -894,7 +1515,7 @@ func chanrecv2(c *hchan, elem unsafe.Pointer) (received bool) {
 
 
 func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool) {
-    // raceenabled: don't need to check ep, as it is always on the stack
+    // raceenabled: don&#39;t need to check ep, as it is always on the stack
     // or is new memory allocated by reflect.
 
     // 如果在 nil channel 上进行 recv 操作，那么会永远阻塞
@@ -908,11 +1529,11 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool)
         }
         // 当前 goroutine: Grunning -&gt; Gwaiting
         // 其实就是该 goroutine 直接泄露 leak 了
-        gopark(nil, nil, &quot;chan receive (nil chan)&quot;, traceEvGoStop, 2)
+        gopark(nil, nil, &#34;chan receive (nil chan)&#34;, traceEvGoStop, 2)
 
         // 放个 throw 有点莫名其妙
         // 不过这段代码确实永远达到不了
-        throw(&quot;unreachable&quot;)
+        throw(&#34;unreachable&#34;)
     }
 
     // Fast path: check for failed non-blocking operation without acquiring the lock.
@@ -957,7 +1578,7 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool)
     if sg := c.sendq.dequeue(); sg != nil {
         // Found a waiting sender. If buffer is size 0, receive value
         // directly from sender. Otherwise, receive from head of queue
-        // and add sender's value to the tail of the queue (both map to
+        // and add sender&#39;s value to the tail of the queue (both map to
         // the same buffer slot because the queue is full).
         recv(c, sg, ep, func() { unlock(&amp;c.lock) }, 3)
         return true, true
@@ -1011,12 +1632,12 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool)
     c.recvq.enqueue(mysg)
 
     // Grunning -&gt; Gwaiting
-    goparkunlock(&amp;c.lock, &quot;chan receive&quot;, traceEvGoBlockRecv, 3)
+    goparkunlock(&amp;c.lock, &#34;chan receive&#34;, traceEvGoBlockRecv, 3)
 
     // someone woke us up
     // 被唤醒
     if mysg != gp.waiting {
-        throw(&quot;G waiting list is corrupted&quot;)
+        throw(&#34;G waiting list is corrupted&#34;)
     }
     gp.waiting = nil
     if mysg.releasetime &gt; 0 {
@@ -1038,11 +1659,11 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool)
 //    written to ep.
 // For synchronous channels, both values are the same.
 // For asynchronous channels, the receiver gets its data from
-// the channel buffer and the sender's data is put in the
+// the channel buffer and the sender&#39;s data is put in the
 // channel buffer.
 // Channel c must be full and locked. recv unlocks c with unlockf.
 // sg must already be dequeued from c.
-// A non-nil ep must point to the heap or the caller's stack.
+// A non-nil ep must point to the heap or the caller&#39;s stack.
 func recv(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
     if c.dataqsiz == 0 {
         if ep != nil {
@@ -1080,20 +1701,88 @@ func recv(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
 
     // Gwaiting -&gt; Grunnable
     goready(gp, skip+1)
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <h4 id="关闭channel">关闭channel</h4>
-
-<pre><code>func closechan(c *hchan) {
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func closechan(c *hchan) {
     if c == nil {
-        panic(plainError(&quot;close of nil channel&quot;))
+        panic(plainError(&#34;close of nil channel&#34;))
     }
 
     lock(&amp;c.lock)
     if c.closed != 0 {
         unlock(&amp;c.lock)
-        panic(plainError(&quot;close of closed channel&quot;))
+        panic(plainError(&#34;close of closed channel&#34;))
     }
 
     c.closed = 1
@@ -1142,16 +1831,16 @@ func recv(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
     }
     unlock(&amp;c.lock)
 
-    // Ready all Gs now that we've dropped the channel lock.
+    // Ready all Gs now that we&#39;ve dropped the channel lock.
     for glist != nil {
         gp := glist
         glist = glist.schedlink.ptr()
         gp.schedlink = 0
         goready(gp, 3)
     }
-}
-</code></pre>
-
+}</pre></td></tr></table>
+</div>
+</div>
 <p>close channel 的工作除了将 c.closed 设置为 1。还需要：</p>
 
 <ul>

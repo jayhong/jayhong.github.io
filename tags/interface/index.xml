@@ -6,7 +6,7 @@
     <description>Recent content in Interface on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 13 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 14 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://jayhong.github.io/tags/interface/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,10 +14,10 @@
     <item>
       <title>golang reflect 剖析</title>
       <link>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</link>
-      <pubDate>Wed, 13 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Thu, 14 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</guid>
-      <description>http://legendtkl.com/2017/07/01/golang-interface-implement/ http://legendtkl.com/2017/06/12/understanding-golang-interface/ http://wudaijun.com/2018/01/go-interface-implement/</description>
+      <description>之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的 反射代码剖析 需要先了解一下golang中的类型系统以及</description>
     </item>
     
     <item>

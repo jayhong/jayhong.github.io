@@ -70,7 +70,7 @@
 
 <meta itemprop="datePublished" content="2019-03-05T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-03-05T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="4829">
+<meta itemprop="wordCount" content="5027">
 
 
 
@@ -299,8 +299,8 @@
             <a href="https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"> golang基础知识 </a>
             
           </div>
-        <span class="more-meta"> 约 4829 字 </span>
-          <span class="more-meta"> 预计阅读 10 分钟 </span>
+        <span class="more-meta"> 约 5027 字 </span>
+          <span class="more-meta"> 预计阅读 11 分钟 </span>
 
         
         
@@ -380,28 +380,46 @@
 在创建变量的时候就已经确定，反射主要与Golang的interface类型相关（它的type是concrete type），只有interface类型才有反射一说。</p>
 
 <p>在Golang的实现中，每个interface变量都有一个对应pair，pair中记录了实际变量的值和类型:</p>
-
-<pre><code>(value, type)
-</code></pre>
-
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">(value, type)</pre></td></tr></table>
+</div>
+</div>
 <p>value是实际变量值，type是实际变量的类型。一个interface{}类型的变量包含了2个指针，一个指针指向值的类型【对应concrete type】，另外一个指针指向实际的值【对应value】。</p>
 
 <p>例如</p>
-
-<pre><code>var r io.Reader
-tty, err := os.OpenFile(&quot;/dev/tty&quot;, os.O_RDWR, 0)
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">var r io.Reader
+tty, err := os.OpenFile(&#34;/dev/tty&#34;, os.O_RDWR, 0)
 if err != nil {
     return nil, err
 }
-r = tty
-</code></pre>
-
+r = tty</pre></td></tr></table>
+</div>
+</div>
 <p>接口变量r的pair中将记录如下信息：(tty, *os.File)，这个pair在接口变量的连续赋值过程中是不变的，将接口变量r赋给另一个接口变量w:</p>
-
-<pre><code>var w io.Writer
-w = r.(io.Writer)
-</code></pre>
-
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">var w io.Writer
+w = r.(io.Writer)</pre></td></tr></table>
+</div>
+</div>
 <p>接口变量w的pair与r的pair相同，都是:(tty, *os.File)，即使w是空接口类型，pair也是不变的。
 interface及其pair的存在，是Golang中实现反射的前提，理解了pair，就更容易理解反射。反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。</p>
 
@@ -411,37 +429,68 @@ interface及其pair的存在，是Golang中实现反射的前提，理解了pair
 
 <p>既然反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。那么在Golang的reflect反射包中有什么样的方式可以让我们直接获取到变量内部的信息呢？
 提供了两种类型（或者说两个方法）让我们可以很容易的访问接口变量内容，分别是reflect.ValueOf() 和 reflect.TypeOf()，看看官方的解释</p>
-
-<pre><code>// ValueOf returns a new Value initialized to the concrete value
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// ValueOf returns a new Value initialized to the concrete value
 // stored in the interface i.  ValueOf(nil) returns the zero 
-func ValueOf(i interface{}) Value {...}
-</code></pre>
-
-<pre><code>// TypeOf returns the reflection Type that represents the dynamic type of i.
+func ValueOf(i interface{}) Value {...}</pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// TypeOf returns the reflection Type that represents the dynamic type of i.
 // If i is a nil interface value, TypeOf returns nil.
-func TypeOf(i interface{}) Type {...}
-</code></pre>
-
+func TypeOf(i interface{}) Type {...}</pre></td></tr></table>
+</div>
+</div>
 <p>reflect.TypeOf()是获取pair中的type，reflect.ValueOf()获取pair中的value，示例如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
 
-<pre><code>package main
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&#34;fmt&#34;</span>
+    <span class="s">&#34;reflect&#34;</span>
+<span class="p">)</span>
 
-import (
-    &quot;fmt&quot;
-    &quot;reflect&quot;
-)
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">x</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mf">3.4</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;type:&#34;</span><span class="p">,</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">TypeOf</span><span class="p">(</span><span class="nx">x</span><span class="p">))</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;value: &#34;</span><span class="p">,</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="nx">num</span><span class="p">))</span>
+<span class="p">}</span>
 
-func main() {
-    var x float64 = 3.4
-    fmt.Println(&quot;type:&quot;, reflect.TypeOf(x))
-    fmt.Println(&quot;value: &quot;, reflect.ValueOf(num))
-}
-
-运行结果:
-type:  float64
-value:  3.4
-</code></pre>
-
+<span class="nx">运行结果</span><span class="p">:</span>
+<span class="kd">type</span><span class="p">:</span>  <span class="kt">float64</span>
+<span class="nx">value</span><span class="p">:</span>  <span class="mf">3.4</span></pre></td></tr></table>
+</div>
+</div>
 <h5 id="说明">说明</h5>
 
 <ul>
@@ -460,38 +509,71 @@ value:  3.4
 <h5 id="已知原有类型-进行-强制转换">已知原有类型【进行“强制转换”】</h5>
 
 <p>已知类型后转换为其对应的类型的做法如下，直接通过Interface方法然后强制转换，如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">realValue := value.Interface().(已知的类型)</pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
 
-<pre><code>realValue := value.Interface().(已知的类型)
-</code></pre>
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&#34;fmt&#34;</span>
+    <span class="s">&#34;reflect&#34;</span>
+<span class="p">)</span>
 
-<pre><code>package main
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">num</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mf">1.2345</span>
 
-import (
-    &quot;fmt&quot;
-    &quot;reflect&quot;
-)
+    <span class="nx">pointer</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">num</span><span class="p">)</span>
+    <span class="nx">value</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="nx">num</span><span class="p">)</span>
 
-func main() {
-    var num float64 = 1.2345
+    <span class="c1">// 可以理解为“强制转换”，但是需要注意的时候，转换的时候，如果转换的类型不完全符合，则直接panic
+</span><span class="c1"></span>    <span class="c1">// Golang 对类型要求非常严格，类型一定要完全符合
+</span><span class="c1"></span>    <span class="c1">// 如下两个，一个是*float64，一个是float64，如果弄混，则会panic
+</span><span class="c1"></span>    <span class="nx">convertPointer</span> <span class="o">:=</span> <span class="nx">pointer</span><span class="p">.</span><span class="nf">Interface</span><span class="p">().(</span><span class="o">*</span><span class="kt">float64</span><span class="p">)</span>
+    <span class="nx">convertValue</span> <span class="o">:=</span> <span class="nx">value</span><span class="p">.</span><span class="nf">Interface</span><span class="p">().(</span><span class="kt">float64</span><span class="p">)</span>
 
-    pointer := reflect.ValueOf(&amp;num)
-    value := reflect.ValueOf(num)
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">convertPointer</span><span class="p">)</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">convertValue</span><span class="p">)</span>
+<span class="p">}</span>
 
-    // 可以理解为“强制转换”，但是需要注意的时候，转换的时候，如果转换的类型不完全符合，则直接panic
-    // Golang 对类型要求非常严格，类型一定要完全符合
-    // 如下两个，一个是*float64，一个是float64，如果弄混，则会panic
-    convertPointer := pointer.Interface().(*float64)
-    convertValue := value.Interface().(float64)
-
-    fmt.Println(convertPointer)
-    fmt.Println(convertValue)
-}
-
-运行结果：
-0xc42000e238
-1.2345
-</code></pre>
-
+<span class="nx">运行结果</span><span class="err">：</span>
+<span class="mh">0xc42000e238</span>
+<span class="mf">1.2345</span></pre></td></tr></table>
+</div>
+</div>
 <h5 id="说明-1">说明</h5>
 
 <ul>
@@ -503,69 +585,130 @@ func main() {
 <h4 id="未知原有类型-遍历探测其filed">未知原有类型【遍历探测其Filed】</h4>
 
 <p>很多情况下，我们可能并不知道其具体类型，那么这个时候，该如何做呢？需要我们进行遍历探测其Filed来得知，示例如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
 
-<pre><code>package main
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&#34;fmt&#34;</span>
+    <span class="s">&#34;reflect&#34;</span>
+<span class="p">)</span>
 
-import (
-    &quot;fmt&quot;
-    &quot;reflect&quot;
-)
+<span class="kd">type</span> <span class="nx">User</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">Id</span>   <span class="kt">int</span>
+    <span class="nx">Name</span> <span class="kt">string</span>
+    <span class="nx">Age</span>  <span class="kt">int</span>
+<span class="p">}</span>
 
-type User struct {
-    Id   int
-    Name string
-    Age  int
-}
+<span class="kd">func</span> <span class="p">(</span><span class="nx">u</span> <span class="nx">User</span><span class="p">)</span> <span class="nf">ReflectCallFunc</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Allen.Wu ReflectCallFunc&#34;</span><span class="p">)</span>
+<span class="p">}</span>
 
-func (u User) ReflectCallFunc() {
-    fmt.Println(&quot;Allen.Wu ReflectCallFunc&quot;)
-}
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
 
-func main() {
+    <span class="nx">user</span> <span class="o">:=</span> <span class="nx">User</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#34;Allen.Wu&#34;</span><span class="p">,</span> <span class="mi">25</span><span class="p">}</span>
 
-    user := User{1, &quot;Allen.Wu&quot;, 25}
+    <span class="nf">DoFiledAndMethod</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
 
-    DoFiledAndMethod(user)
+<span class="p">}</span>
 
-}
+<span class="c1">// 通过接口来获取任意参数，然后一一揭晓
+</span><span class="c1"></span><span class="kd">func</span> <span class="nf">DoFiledAndMethod</span><span class="p">(</span><span class="nx">input</span> <span class="kd">interface</span><span class="p">{})</span> <span class="p">{</span>
 
-// 通过接口来获取任意参数，然后一一揭晓
-func DoFiledAndMethod(input interface{}) {
+    <span class="nx">getType</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">TypeOf</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;get Type is :&#34;</span><span class="p">,</span> <span class="nx">getType</span><span class="p">.</span><span class="nf">Name</span><span class="p">())</span>
 
-    getType := reflect.TypeOf(input)
-    fmt.Println(&quot;get Type is :&quot;, getType.Name())
+    <span class="nx">getValue</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;get all Fields is:&#34;</span><span class="p">,</span> <span class="nx">getValue</span><span class="p">)</span>
 
-    getValue := reflect.ValueOf(input)
-    fmt.Println(&quot;get all Fields is:&quot;, getValue)
+    <span class="c1">// 获取方法字段
+</span><span class="c1"></span>    <span class="c1">// 1. 先获取interface的reflect.Type，然后通过NumField进行遍历
+</span><span class="c1"></span>    <span class="c1">// 2. 再通过reflect.Type的Field获取其Field
+</span><span class="c1"></span>    <span class="c1">// 3. 最后通过Field的Interface()得到对应的value
+</span><span class="c1"></span>    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">getType</span><span class="p">.</span><span class="nf">NumField</span><span class="p">();</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">field</span> <span class="o">:=</span> <span class="nx">getType</span><span class="p">.</span><span class="nf">Field</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+        <span class="nx">value</span> <span class="o">:=</span> <span class="nx">getValue</span><span class="p">.</span><span class="nf">Field</span><span class="p">(</span><span class="nx">i</span><span class="p">).</span><span class="nf">Interface</span><span class="p">()</span>
+        <span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;%s: %v = %v\n&#34;</span><span class="p">,</span> <span class="nx">field</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span> <span class="nx">field</span><span class="p">.</span><span class="nx">Type</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span>
+    <span class="p">}</span>
 
-    // 获取方法字段
-    // 1. 先获取interface的reflect.Type，然后通过NumField进行遍历
-    // 2. 再通过reflect.Type的Field获取其Field
-    // 3. 最后通过Field的Interface()得到对应的value
-    for i := 0; i &lt; getType.NumField(); i++ {
-        field := getType.Field(i)
-        value := getValue.Field(i).Interface()
-        fmt.Printf(&quot;%s: %v = %v\n&quot;, field.Name, field.Type, value)
-    }
+    <span class="c1">// 获取方法
+</span><span class="c1"></span>    <span class="c1">// 1. 先获取interface的reflect.Type，然后通过.NumMethod进行遍历
+</span><span class="c1"></span>    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">getType</span><span class="p">.</span><span class="nf">NumMethod</span><span class="p">();</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">m</span> <span class="o">:=</span> <span class="nx">getType</span><span class="p">.</span><span class="nf">Method</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span>
+        <span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;%s: %v\n&#34;</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-    // 获取方法
-    // 1. 先获取interface的reflect.Type，然后通过.NumMethod进行遍历
-    for i := 0; i &lt; getType.NumMethod(); i++ {
-        m := getType.Method(i)
-        fmt.Printf(&quot;%s: %v\n&quot;, m.Name, m.Type)
-    }
-}
-
-运行结果：
-get Type is : User
-get all Fields is: {1 Allen.Wu 25}
-Id: int = 1
-Name: string = Allen.Wu
-Age: int = 25
-ReflectCallFunc: func(main.User)
-
-</code></pre>
-
+<span class="nx">运行结果</span><span class="err">：</span>
+<span class="nx">get</span> <span class="nx">Type</span> <span class="nx">is</span> <span class="p">:</span> <span class="nx">User</span>
+<span class="nx">get</span> <span class="nx">all</span> <span class="nx">Fields</span> <span class="nx">is</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span> <span class="nx">Allen</span><span class="p">.</span><span class="nx">Wu</span> <span class="mi">25</span><span class="p">}</span>
+<span class="nx">Id</span><span class="p">:</span> <span class="kt">int</span> <span class="p">=</span> <span class="mi">1</span>
+<span class="nx">Name</span><span class="p">:</span> <span class="kt">string</span> <span class="p">=</span> <span class="nx">Allen</span><span class="p">.</span><span class="nx">Wu</span>
+<span class="nx">Age</span><span class="p">:</span> <span class="kt">int</span> <span class="p">=</span> <span class="mi">25</span>
+<span class="nx">ReflectCallFunc</span><span class="p">:</span> <span class="kd">func</span><span class="p">(</span><span class="nx">main</span><span class="p">.</span><span class="nx">User</span><span class="p">)</span></pre></td></tr></table>
+</div>
+</div>
 <h5 id="说明-2">说明</h5>
 
 <p>通过运行结果可以得知获取未知类型的interface的具体变量及其类型的步骤为：</p>
@@ -589,43 +732,80 @@ struct 或者 struct 的嵌套都是一样的判断处理方式</li>
 <h4 id="通过reflect-value设置实际变量的值">通过reflect.Value设置实际变量的值</h4>
 
 <p>reflect.Value是通过reflect.ValueOf(X)获得的，只有当X是指针的时候，才可以通过reflec.Value修改实际变量X的值，即：要修改反射类型的对象就一定要保证其值是“addressable”的。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
 
-<pre><code>package main
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&#34;fmt&#34;</span>
+    <span class="s">&#34;reflect&#34;</span>
+<span class="p">)</span>
 
-import (
-    &quot;fmt&quot;
-    &quot;reflect&quot;
-)
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
 
-func main() {
+    <span class="kd">var</span> <span class="nx">num</span> <span class="kt">float64</span> <span class="p">=</span> <span class="mf">1.2345</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;old value of pointer:&#34;</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span>
 
-    var num float64 = 1.2345
-    fmt.Println(&quot;old value of pointer:&quot;, num)
+    <span class="c1">// 通过reflect.ValueOf获取num中的reflect.Value，注意，参数必须是指针才能修改其值
+</span><span class="c1"></span>    <span class="nx">pointer</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">num</span><span class="p">)</span>
+    <span class="nx">newValue</span> <span class="o">:=</span> <span class="nx">pointer</span><span class="p">.</span><span class="nf">Elem</span><span class="p">()</span>
 
-    // 通过reflect.ValueOf获取num中的reflect.Value，注意，参数必须是指针才能修改其值
-    pointer := reflect.ValueOf(&amp;num)
-    newValue := pointer.Elem()
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;type of pointer:&#34;</span><span class="p">,</span> <span class="nx">newValue</span><span class="p">.</span><span class="nf">Type</span><span class="p">())</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;settability of pointer:&#34;</span><span class="p">,</span> <span class="nx">newValue</span><span class="p">.</span><span class="nf">CanSet</span><span class="p">())</span>
 
-    fmt.Println(&quot;type of pointer:&quot;, newValue.Type())
-    fmt.Println(&quot;settability of pointer:&quot;, newValue.CanSet())
+    <span class="c1">// 重新赋值
+</span><span class="c1"></span>    <span class="nx">newValue</span><span class="p">.</span><span class="nf">SetFloat</span><span class="p">(</span><span class="mi">77</span><span class="p">)</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;new value of pointer:&#34;</span><span class="p">,</span> <span class="nx">num</span><span class="p">)</span>
 
-    // 重新赋值
-    newValue.SetFloat(77)
-    fmt.Println(&quot;new value of pointer:&quot;, num)
+    <span class="c1">////////////////////
+</span><span class="c1"></span>    <span class="c1">// 如果reflect.ValueOf的参数不是指针，会如何？
+</span><span class="c1"></span>    <span class="nx">pointer</span> <span class="p">=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="nx">num</span><span class="p">)</span>
+    <span class="c1">//newValue = pointer.Elem() // 如果非指针，这里直接panic，“panic: reflect: call of reflect.Value.Elem on float64 Value”
+</span><span class="c1"></span><span class="p">}</span>
 
-    ////////////////////
-    // 如果reflect.ValueOf的参数不是指针，会如何？
-    pointer = reflect.ValueOf(num)
-    //newValue = pointer.Elem() // 如果非指针，这里直接panic，“panic: reflect: call of reflect.Value.Elem on float64 Value”
-}
-
-运行结果：
-old value of pointer: 1.2345
-type of pointer: float64
-settability of pointer: true
-new value of pointer: 77
-</code></pre>
-
+<span class="nx">运行结果</span><span class="err">：</span>
+<span class="nx">old</span> <span class="nx">value</span> <span class="nx">of</span> <span class="nx">pointer</span><span class="p">:</span> <span class="mf">1.2345</span>
+<span class="kd">type</span> <span class="nx">of</span> <span class="nx">pointer</span><span class="p">:</span> <span class="kt">float64</span>
+<span class="nx">settability</span> <span class="nx">of</span> <span class="nx">pointer</span><span class="p">:</span> <span class="kc">true</span>
+<span class="nx">new</span> <span class="nx">value</span> <span class="nx">of</span> <span class="nx">pointer</span><span class="p">:</span> <span class="mi">77</span></pre></td></tr></table>
+</div>
+</div>
 <p>说明</p>
 
 <ul>
@@ -650,56 +830,106 @@ new value of pointer: 77
 <h4 id="通过reflect-valueof来进行方法的调用">通过reflect.ValueOf来进行方法的调用</h4>
 
 <p>这算是一个高级用法了，前面我们只说到对类型、变量的几种反射的用法，包括如何获取其值、其类型、如果重新设置新值。但是在工程应用中，另外一个常用并且属于高级的用法，就是通过reflect来进行方法【函数】的调用。比如我们要做框架工程的时候，需要可以随意扩展方法，或者说用户可以自定义方法，那么我们通过什么手段来扩展让用户能够自定义呢？关键点在于用户的自定义方法是未可知的，因此我们可以通过reflect来搞定</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
 
-<pre><code>package main
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&#34;fmt&#34;</span>
+    <span class="s">&#34;reflect&#34;</span>
+<span class="p">)</span>
 
-import (
-    &quot;fmt&quot;
-    &quot;reflect&quot;
-)
+<span class="kd">type</span> <span class="nx">User</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">Id</span>   <span class="kt">int</span>
+    <span class="nx">Name</span> <span class="kt">string</span>
+    <span class="nx">Age</span>  <span class="kt">int</span>
+<span class="p">}</span>
 
-type User struct {
-    Id   int
-    Name string
-    Age  int
-}
+<span class="kd">func</span> <span class="p">(</span><span class="nx">u</span> <span class="nx">User</span><span class="p">)</span> <span class="nf">ReflectCallFuncHasArgs</span><span class="p">(</span><span class="nx">name</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">age</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;ReflectCallFuncHasArgs name: &#34;</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="s">&#34;, age:&#34;</span><span class="p">,</span> <span class="nx">age</span><span class="p">,</span> <span class="s">&#34;and origal User.Name:&#34;</span><span class="p">,</span> <span class="nx">u</span><span class="p">.</span><span class="nx">Name</span><span class="p">)</span>
+<span class="p">}</span>
 
-func (u User) ReflectCallFuncHasArgs(name string, age int) {
-    fmt.Println(&quot;ReflectCallFuncHasArgs name: &quot;, name, &quot;, age:&quot;, age, &quot;and origal User.Name:&quot;, u.Name)
-}
+<span class="kd">func</span> <span class="p">(</span><span class="nx">u</span> <span class="nx">User</span><span class="p">)</span> <span class="nf">ReflectCallFuncNoArgs</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;ReflectCallFuncNoArgs&#34;</span><span class="p">)</span>
+<span class="p">}</span>
 
-func (u User) ReflectCallFuncNoArgs() {
-    fmt.Println(&quot;ReflectCallFuncNoArgs&quot;)
-}
-
-// 如何通过反射来进行方法的调用？
-// 本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调动mv.Call
-
-func main() {
-    user := User{1, &quot;Allen.Wu&quot;, 25}
+<span class="c1">// 如何通过反射来进行方法的调用？
+</span><span class="c1">// 本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调动mv.Call
+</span><span class="c1"></span>
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">user</span> <span class="o">:=</span> <span class="nx">User</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#34;Allen.Wu&#34;</span><span class="p">,</span> <span class="mi">25</span><span class="p">}</span>
     
-    // 1. 要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理
-    getValue := reflect.ValueOf(user)
+    <span class="c1">// 1. 要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理
+</span><span class="c1"></span>    <span class="nx">getValue</span> <span class="o">:=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
 
-    // 一定要指定参数为正确的方法名
-    // 2. 先看看带有参数的调用方法
-    methodValue := getValue.MethodByName(&quot;ReflectCallFuncHasArgs&quot;)
-    args := []reflect.Value{reflect.ValueOf(&quot;wudebao&quot;), reflect.ValueOf(30)}
-    methodValue.Call(args)
+    <span class="c1">// 一定要指定参数为正确的方法名
+</span><span class="c1"></span>    <span class="c1">// 2. 先看看带有参数的调用方法
+</span><span class="c1"></span>    <span class="nx">methodValue</span> <span class="o">:=</span> <span class="nx">getValue</span><span class="p">.</span><span class="nf">MethodByName</span><span class="p">(</span><span class="s">&#34;ReflectCallFuncHasArgs&#34;</span><span class="p">)</span>
+    <span class="nx">args</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">reflect</span><span class="p">.</span><span class="nx">Value</span><span class="p">{</span><span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="s">&#34;wudebao&#34;</span><span class="p">),</span> <span class="nx">reflect</span><span class="p">.</span><span class="nf">ValueOf</span><span class="p">(</span><span class="mi">30</span><span class="p">)}</span>
+    <span class="nx">methodValue</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="nx">args</span><span class="p">)</span>
 
-    // 一定要指定参数为正确的方法名
-    // 3. 再看看无参数的调用方法
-    methodValue = getValue.MethodByName(&quot;ReflectCallFuncNoArgs&quot;)
-    args = make([]reflect.Value, 0)
-    methodValue.Call(args)
-}
+    <span class="c1">// 一定要指定参数为正确的方法名
+</span><span class="c1"></span>    <span class="c1">// 3. 再看看无参数的调用方法
+</span><span class="c1"></span>    <span class="nx">methodValue</span> <span class="p">=</span> <span class="nx">getValue</span><span class="p">.</span><span class="nf">MethodByName</span><span class="p">(</span><span class="s">&#34;ReflectCallFuncNoArgs&#34;</span><span class="p">)</span>
+    <span class="nx">args</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">reflect</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="nx">methodValue</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="nx">args</span><span class="p">)</span>
+<span class="p">}</span>
 
 
-运行结果：
-ReflectCallFuncHasArgs name:  wudebao , age: 30 and origal User.Name: Allen.Wu
-ReflectCallFuncNoArgs
-</code></pre>
-
+<span class="nx">运行结果</span><span class="err">：</span>
+<span class="nx">ReflectCallFuncHasArgs</span> <span class="nx">name</span><span class="p">:</span>  <span class="nx">wudebao</span> <span class="p">,</span> <span class="nx">age</span><span class="p">:</span> <span class="mi">30</span> <span class="nx">and</span> <span class="nx">origal</span> <span class="nx">User</span><span class="p">.</span><span class="nx">Name</span><span class="p">:</span> <span class="nx">Allen</span><span class="p">.</span><span class="nx">Wu</span>
+<span class="nx">ReflectCallFuncNoArgs</span></pre></td></tr></table>
+</div>
+</div>
 <p>说明</p>
 
 <ul>

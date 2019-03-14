@@ -23,7 +23,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <meta name="author" content="jayhong" />
-  <meta name="description" content="http://legendtkl.com/2017/07/01/golang-interface-implement/ http://legendtkl.com/2017/06/12/understanding-golang-interface/ http://wudaijun.com/2018/01/go-interface-implement/" />
+  <meta name="description" content="之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的 反射代码剖析 需要先了解一下golang中的类型系统以及" />
 
   <meta name="keywords" content="jayhong, blog, golang" />
 
@@ -58,26 +58,26 @@
 
 
 <meta property="og:title" content="golang reflect 剖析" />
-<meta property="og:description" content="http://legendtkl.com/2017/07/01/golang-interface-implement/ http://legendtkl.com/2017/06/12/understanding-golang-interface/ http://wudaijun.com/2018/01/go-interface-implement/" />
+<meta property="og:description" content="之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的 反射代码剖析 需要先了解一下golang中的类型系统以及" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/" />
-<meta property="article:published_time" content="2019-03-13T00:00:00&#43;00:00"/>
-<meta property="article:modified_time" content="2019-03-13T00:00:00&#43;00:00"/>
+<meta property="article:published_time" content="2019-03-14T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-03-14T00:00:00&#43;00:00"/>
 
 <meta itemprop="name" content="golang reflect 剖析">
-<meta itemprop="description" content="http://legendtkl.com/2017/07/01/golang-interface-implement/ http://legendtkl.com/2017/06/12/understanding-golang-interface/ http://wudaijun.com/2018/01/go-interface-implement/">
+<meta itemprop="description" content="之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的 反射代码剖析 需要先了解一下golang中的类型系统以及">
 
 
-<meta itemprop="datePublished" content="2019-03-13T00:00:00&#43;00:00" />
-<meta itemprop="dateModified" content="2019-03-13T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="3">
+<meta itemprop="datePublished" content="2019-03-14T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-03-14T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="1608">
 
 
 
 <meta itemprop="keywords" content="golang,blog,interface,实现原理," />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="golang reflect 剖析"/>
-<meta name="twitter:description" content="http://legendtkl.com/2017/07/01/golang-interface-implement/ http://legendtkl.com/2017/06/12/understanding-golang-interface/ http://wudaijun.com/2018/01/go-interface-implement/"/>
+<meta name="twitter:description" content="之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的 反射代码剖析 需要先了解一下golang中的类型系统以及"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -292,15 +292,15 @@
       <h1 class="post-title">golang reflect 剖析</h1>
       
       <div class="post-meta">
-        <time datetime="2019-03-13" class="post-time">
-          2019-03-13
+        <time datetime="2019-03-14" class="post-time">
+          2019-03-14
         </time>
         <div class="post-category">
             <a href="https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"> golang基础知识 </a>
             
           </div>
-        <span class="more-meta"> 约 3 字 </span>
-          <span class="more-meta"> 预计阅读 1 分钟 </span>
+        <span class="more-meta"> 约 1608 字 </span>
+          <span class="more-meta"> 预计阅读 4 分钟 </span>
 
         
         
@@ -319,14 +319,366 @@
 <div class="post-toc" id="post-toc">
   <h2 class="post-toc-title">文章目录</h2>
   <div class="post-toc-content">
-    
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#反射代码剖析">反射代码剖析</a>
+<ul>
+<li><a href="#typeof">TypeOf</a></li>
+<li><a href="#valueof">ValueOf</a></li>
+</ul></li>
+<li><a href="#参考链接">参考链接</a></li>
+</ul></li>
+</ul>
+</nav>
   </div>
 </div>
 
     
     <div class="post-content">
-      <p><a href="http://legendtkl.com/2017/07/01/golang-interface-implement/">http://legendtkl.com/2017/07/01/golang-interface-implement/</a><br />
-<a href="http://legendtkl.com/2017/06/12/understanding-golang-interface/">http://legendtkl.com/2017/06/12/understanding-golang-interface/</a>
+      
+
+<p>之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的</p>
+
+<h2 id="反射代码剖析">反射代码剖析</h2>
+
+<p>需要先了解一下golang中的类型系统以及interface的实现,golang中所有的类型都有一个_type字段用于描述该类型，对于一些复合类型
+还需要有其他的字段用于描述其他的信息，比如chan，除了chan本身外，还需要描述其元素类型，而map则需要key类型信息和value类型信息等:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/ src/runtime/type.go
+// ptrType represents a pointer type.
+type ptrType struct {
+   typ     _type   // 指针类型 
+   elem  *_type // 指针所指向的元素类型
+}
+type chantype struct {
+    typ  _type        // channel类型
+    elem *_type     // channel元素类型
+    dir  uintptr
+}
+type maptype struct {
+    typ           _type
+    key           *_type
+    elem          *_type
+    bucket        *_type // internal type representing a hash bucket
+    hmap          *_type // internal type representing a hmap
+    keysize       uint8  // size of key slot
+    indirectkey   bool   // store ptr to key instead of key itself
+    valuesize     uint8  // size of value slot
+    indirectvalue bool   // store ptr to value instead of value itself
+    bucketsize    uint16 // size of bucket
+    reflexivekey  bool   // true if k==k for all keys
+    needkeyupdate bool   // true if we need to update key on an overwrite
+}</pre></td></tr></table>
+</div>
+</div>
+<p>interface 是由两个数据接口eface和iface组成的，具体可以看下上一篇文章</p>
+
+<h3 id="typeof">TypeOf</h3>
+
+<p>TypeOf代码在 reflect/type.go 中，TypeOf的源代码比较简单，是将eface转成emptyInterface结构然后返回typ字段，TypeOf和ValueOf的参数是interface{}，
+所以会调用runtime.convT2E 进行转换</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// TypeOf returns the reflection Type that represents the dynamic type of i.
+// If i is a nil interface value, TypeOf returns nil.
+func TypeOf(i interface{}) Type {
+    eface := *(*emptyInterface)(unsafe.Pointer(&amp;i))
+    return toType(eface.typ)
+}</pre></td></tr></table>
+</div>
+</div>
+<p>对于复合类型，如Ptr, Slice, Chan, Map等，它们的type信息中包含其子类型的信息，如Slice元素类型，而其元素类型也可能是复合类型，因此type实际上是一颗”类型树”，
+可通过reflect.Elem()和reflect.Key()等API来获取这些子类型信息，但如果如果type不匹配(比如reflect.TypeOf([]int{1,2}).Key())，会panic。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// reflect/type.go
+// reflect.rtype结构体定义和runtime._type一致  type.kind定义也一致(为了分包而重复定义)
+// Elem()获取rtype中的元素类型，只针对复合类型(Array, Chan, Map, Ptr, Slice)有效
+func (t *rtype) Elem() Type {
+   switch t.Kind() {
+   case Array:
+      tt := (*arrayType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Chan:
+      tt := (*chanType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Map:
+      // 对Map来讲，Elem()得到的是其Value类型
+      // 可通过rtype.Key()得到Key类型
+      tt := (*mapType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Ptr:
+      tt := (*ptrType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   case Slice:
+      tt := (*sliceType)(unsafe.Pointer(t))
+      return toType(tt.elem)
+   }
+   panic(&#34;reflect: Elem of invalid type&#34;)
+}</pre></td></tr></table>
+</div>
+</div>
+<p>取出type之后可以根据type中的字段，获取到关于类型的很多信息，很多的操作都是通过判断kind 然后转成相应类型的
+指针，然后就可以取出该类型的信息了</p>
+
+<h3 id="valueof">ValueOf</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">type Value struct {
+    // 值的类型
+    typ *rtype
+    // 立即数或指向数据的指针
+    ptr unsafe.Pointer
+    // type flag uintptr
+    // 指明值的类型，是否只读，ptr字段是否是指针等
+    flag
+}
+
+func ValueOf(i interface{}) Value {
+    if i == nil {
+        return Value{}
+    }
+
+    escapes(i)
+
+    return unpackEface(i)
+}
+
+// 将数据从interface{}解包为reflec.Value
+func unpackEface(i interface{}) Value {
+    e := (*emptyInterface)(unsafe.Pointer(&amp;i))
+    // NOTE: don&#39;t read e.word until we know whether it is really a pointer or not.
+    t := e.typ
+    if t == nil {
+        return Value{}
+    }
+    f := flag(t.Kind())
+    if ifaceIndir(t) {
+        f |= flagIndir
+    }
+    return Value{t, e.word, f}
+}
+ 
+// 将数据由reflect.Value打包为interface{}
+func packEface(v Value) interface{} {
+    t := v.typ
+    var i interface{}
+    e := (*emptyInterface)(unsafe.Pointer(&amp;i))
+    // First, fill in the data portion of the interface.
+    switch {
+    case ifaceIndir(t):
+        if v.flag&amp;flagIndir == 0 {
+            panic(&#34;bad indir&#34;)
+        }
+        ptr := v.ptr
+        if v.flag&amp;flagAddr != 0 {
+            c := unsafe_New(t)
+            typedmemmove(t, c, ptr)
+            ptr = c
+        }
+        e.word = ptr
+    case v.flag&amp;flagIndir != 0:
+        e.word = *(*unsafe.Pointer)(v.ptr)
+    default:
+        e.word = v.ptr
+    }
+
+    e.typ = t
+    return i
+}
+ 
+// 将reflect.Value转换为interface{}，相当于reflect.ValueOf的逆操作
+// 等价于: var i interface{} = (v&#39;s underlying value)
+func (v Value) Interface() (i interface{}) {
+   return valueInterface(v, true)
+}
+
+func valueInterface(v Value, safe bool) interface{} {
+   if v.flag == 0 {
+      panic(&amp;ValueError{&#34;reflect.Value.Interface&#34;, 0})
+   }
+   if safe &amp;&amp; v.flag&amp;flagRO != 0 {
+      panic(&#34;reflect.Value.Interface: cannot return value obtained from unexported field or method&#34;)
+   }
+   if v.flag&amp;flagMethod != 0 {
+      v = makeMethodValue(&#34;Interface&#34;, v)
+   }
+   // 当interface{}作为子类型时，会产生类型为Interface的Value
+   // 如 reflect.TypeOf(m).Elem().Kind() == Interface
+   if v.kind() == Interface {
+      if v.NumMethod() == 0 {
+         return *(*interface{})(v.ptr)
+      }
+      return *(*interface {
+         M()
+      })(v.ptr)
+   }
+   return packEface(v)
+}</pre></td></tr></table>
+</div>
+</div>
+<h2 id="参考链接">参考链接</h2>
+
+<p><a href="https://ieevee.com/tech/2017/07/29/go-type.html">https://ieevee.com/tech/2017/07/29/go-type.html</a><br />
+<a href="http://legendtkl.com/2017/07/01/golang-interface-implement/">http://legendtkl.com/2017/07/01/golang-interface-implement/</a><br />
 <a href="http://wudaijun.com/2018/01/go-interface-implement/">http://wudaijun.com/2018/01/go-interface-implement/</a></p>
 
     </div>
@@ -340,7 +692,7 @@
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2019-03-13</span>
+    <span class="item-content">2019-03-14</span>
   </p>
   
   <p class="copyright-item">
