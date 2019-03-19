@@ -26,6 +26,1296 @@
     </item>
     
     <item>
+      <title>golang map 剖析</title>
+      <link>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</link>
+      <pubDate>Mon, 18 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;map在工作中用的还是很多的，可以通过学习map的源码实现来避免很多的坑。以及实现原理。
+map 主要需要掌握的就是初始化make、插入、查找、扩容、range的源码实现。map主要要注意的地方
+如何处理hash冲突，map扩容相关的问题&lt;/p&gt;
+
+&lt;h2 id=&#34;初始化-make-map-int-int&#34;&gt;初始化&lt;code&gt;make(map[int]int)&lt;/code&gt;&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;1、判断类型的大小与sizeof的大小是否一致（why）&lt;/li&gt;
+&lt;li&gt;2、判断key和value的大小以及根据hint确定B的大小&lt;br /&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;3、如果hint是不为0，会分配一个bucket array数组，如果为0，是使用lazyinit的方式在赋值的时候才进行初始化&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;37
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;38
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;39
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;40
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;41
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;42
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;43
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;44
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;45
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;46
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;47
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;48
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;49
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;50
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;51
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;52
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;53
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;54
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;55
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;56
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;57
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;58
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;59
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;60
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;61
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;62
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;63
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;64
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;65
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;66
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;67
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;68
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;69
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;70
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;71
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;72
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;73
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;74
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;75
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;76
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;77
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;78
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;79
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;80
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;81
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;82
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;83
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;84
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;85
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;86
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;87
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;88
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;// makemap implements a Go map creation make(map[k]v, hint)
+// If the compiler has determined that the map or the first bucket
+// can be created on the stack, h and/or bucket may be non-nil.
+// If h != nil, the map can be created directly in h.
+// If bucket != nil, bucket can be used as the first bucket.
+func makemap(t *maptype, hint int64, h *hmap, bucket unsafe.Pointer) *hmap {
+if sz := unsafe.Sizeof(hmap{}); sz &amp;gt; 48 || sz != t.hmap.size {
+    println(&amp;#34;runtime: sizeof(hmap) =&amp;#34;, sz, &amp;#34;, t.hmap.size =&amp;#34;, t.hmap.size)
+    throw(&amp;#34;bad hmap size&amp;#34;)
+}
+
+if hint &amp;lt; 0 || hint &amp;gt; int64(maxSliceCap(t.bucket.size)) {
+    hint = 0
+}
+
+if !ismapkey(t.key) {
+    throw(&amp;#34;runtime.makemap: unsupported map key type&amp;#34;)
+}
+
+// check compiler&amp;#39;s and reflect&amp;#39;s math
+if t.key.size &amp;gt; maxKeySize &amp;amp;&amp;amp; (!t.indirectkey || t.keysize != uint8(sys.PtrSize)) ||
+    t.key.size &amp;lt;= maxKeySize &amp;amp;&amp;amp; (t.indirectkey || t.keysize != uint8(t.key.size)) {
+    throw(&amp;#34;key size wrong&amp;#34;)
+}
+if t.elem.size &amp;gt; maxValueSize &amp;amp;&amp;amp; (!t.indirectvalue || t.valuesize != uint8(sys.PtrSize)) ||
+    t.elem.size &amp;lt;= maxValueSize &amp;amp;&amp;amp; (t.indirectvalue || t.valuesize != uint8(t.elem.size)) {
+    throw(&amp;#34;value size wrong&amp;#34;)
+}
+
+// invariants we depend on. We should probably check these at compile time
+// somewhere, but for now we&amp;#39;ll do it here.
+if t.key.align &amp;gt; bucketCnt {
+    throw(&amp;#34;key align too big&amp;#34;)
+}
+if t.elem.align &amp;gt; bucketCnt {
+    throw(&amp;#34;value align too big&amp;#34;)
+}
+if t.key.size%uintptr(t.key.align) != 0 {
+    throw(&amp;#34;key size not a multiple of key align&amp;#34;)
+}
+if t.elem.size%uintptr(t.elem.align) != 0 {
+    throw(&amp;#34;value size not a multiple of value align&amp;#34;)
+}
+if bucketCnt &amp;lt; 8 {
+    throw(&amp;#34;bucketsize too small for proper alignment&amp;#34;)
+}
+if dataOffset%uintptr(t.key.align) != 0 {
+    throw(&amp;#34;need padding in bucket (key)&amp;#34;)
+}
+if dataOffset%uintptr(t.elem.align) != 0 {
+    throw(&amp;#34;need padding in bucket (value)&amp;#34;)
+}
+
+// find size parameter which will hold the requested # of elements
+B := uint8(0)
+for ; overLoadFactor(hint, B); B++ {
+}
+
+// allocate initial hash table
+// if B == 0, the buckets field is allocated lazily later (in mapassign)
+// If hint is large zeroing this memory could take a while.
+buckets := bucket
+var extra *mapextra
+if B != 0 {
+    var nextOverflow *bmap
+    buckets, nextOverflow = makeBucketArray(t, B)
+    if nextOverflow != nil {
+        extra = new(mapextra)
+        extra.nextOverflow = nextOverflow
+    }
+}
+
+// initialize Hmap
+if h == nil {
+    h = (*hmap)(newobject(t.hmap))
+}
+h.count = 0
+h.B = B
+h.extra = extra
+h.flags = 0
+h.hash0 = fastrand()
+h.buckets = buckets
+h.oldbuckets = nil
+h.nevacuate = 0
+h.noverflow = 0
+
+return h
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;元素访问-mapassess&#34;&gt;元素访问&lt;code&gt;mapassess&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;实现上有 mapaccess1，mapaccess2，mapaccessK 几个方法，但几个方法都差不多，只差别在返回内容上。mapaccess1 和 mapaccess2 同时有 32 位、64 位和 string 类型的变种:&lt;/p&gt;
+
+&lt;p&gt;mapaccess1_fast32, mapaccess1_fast64, mapaccess1_faststr&lt;br /&gt;
+mapaccess2_fast32, mapaccess2_fast64, mapaccess2_faststr&lt;br /&gt;
+具体用哪一个变种函数是由编译器在编译期选择的&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;37
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;38
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;39
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;40
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;41
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;42
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;43
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;44
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;45
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;46
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;47
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;48
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;49
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;50
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;51
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;52
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;53
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;54
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;55
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;56
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;57
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;58
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;59
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;60
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;61
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;62
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;func mapaccess2(t *maptype, h *hmap, key unsafe.Pointer) (unsafe.Pointer, bool) {
+    if raceenabled &amp;amp;&amp;amp; h != nil {
+        callerpc := getcallerpc(unsafe.Pointer(&amp;amp;t))
+        pc := funcPC(mapaccess2)
+        racereadpc(unsafe.Pointer(h), callerpc, pc)
+        raceReadObjectPC(t.key, key, callerpc, pc)
+    }
+    if msanenabled &amp;amp;&amp;amp; h != nil {
+        msanread(key, t.key.size)
+    }
+    if h == nil || h.count == 0 {
+        return unsafe.Pointer(&amp;amp;zeroVal[0]), false
+    }
+    //map 不允许并发读写
+    if h.flags&amp;amp;hashWriting != 0 {
+        throw(&amp;#34;concurrent map read and map write&amp;#34;)
+    }
+    alg := t.key.alg
+    hash := alg.hash(key, uintptr(h.hash0))
+    //使用hash值的低位去确定bucket的位置
+    m := uintptr(1)&amp;lt;&amp;lt;h.B - 1
+    b := (*bmap)(unsafe.Pointer(uintptr(h.buckets) + (hash&amp;amp;m)*uintptr(t.bucketsize)))
+    //如果正在map扩容中，在oldbucket中读取数据
+    if c := h.oldbuckets; c != nil {
+        if !h.sameSizeGrow() {
+            // There used to be half as many buckets; mask down one more power of two.
+            m &amp;gt;&amp;gt;= 1
+        }
+        oldb := (*bmap)(unsafe.Pointer(uintptr(c) + (hash&amp;amp;m)*uintptr(t.bucketsize)))
+        if !evacuated(oldb) {
+            b = oldb
+        }
+    }
+    top := uint8(hash &amp;gt;&amp;gt; (sys.PtrSize*8 - 8))
+    if top &amp;lt; minTopHash {
+        top += minTopHash
+    }
+    //遍历bucket中的数据 先拿top位与tophash 进行判断，然后再判断key值，提高判断速度
+    //bucket中如果没有查找到数据，再从overflow中查找，如果overflow中也没有说明没有数据
+    for {
+        for i := uintptr(0); i &amp;lt; bucketCnt; i++ {
+            if b.tophash[i] != top {
+                continue
+            }
+            k := add(unsafe.Pointer(b), dataOffset+i*uintptr(t.keysize))
+            if t.indirectkey {
+                k = *((*unsafe.Pointer)(k))
+            }
+            if alg.equal(key, k) {
+                v := add(unsafe.Pointer(b), dataOffset+bucketCnt*uintptr(t.keysize)+i*uintptr(t.valuesize))
+                if t.indirectvalue {
+                    v = *((*unsafe.Pointer)(v))
+                }
+                return v, true
+            }
+        }
+        b = b.overflow(t)
+        if b == nil {
+            return unsafe.Pointer(&amp;amp;zeroVal[0]), false
+        }
+    }
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;元素赋值&#34;&gt;元素赋值&lt;/h2&gt;
+
+&lt;p&gt;先找到key对应的bucket 然后赋值&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;  1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 35
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 36
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 37
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 38
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 39
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 40
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 41
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 42
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 43
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 44
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 45
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 46
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 47
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 48
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 49
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 50
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 51
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 52
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 53
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 54
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 55
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 56
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 57
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 58
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 59
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 60
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 61
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 62
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 63
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 64
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 65
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 66
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 67
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 68
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 69
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 70
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 71
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 72
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 73
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 74
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 75
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 76
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 77
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 78
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 79
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 80
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 81
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 82
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 83
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 84
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 85
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 86
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 87
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 88
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 89
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 90
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 91
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 92
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 93
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 94
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 95
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 96
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 97
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 98
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 99
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;100
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;101
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;102
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;103
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;104
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;105
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;106
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;107
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;108
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;109
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;110
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;111
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;112
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;113
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;114
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;115
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;116
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;117
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;118
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;119
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;120
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;121
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;122
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;123
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;124
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;125
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;// Like mapaccess, but allocates a slot for the key if it is not present in the map.
+func mapassign(t *maptype, h *hmap, key unsafe.Pointer) unsafe.Pointer {
+    if h == nil {
+        panic(plainError(&amp;#34;assignment to entry in nil map&amp;#34;))
+    }
+    if raceenabled {
+        callerpc := getcallerpc(unsafe.Pointer(&amp;amp;t))
+        pc := funcPC(mapassign)
+        racewritepc(unsafe.Pointer(h), callerpc, pc)
+        raceReadObjectPC(t.key, key, callerpc, pc)
+    }
+    if msanenabled {
+        msanread(key, t.key.size)
+    }
+    // map 不允许并发写
+    if h.flags&amp;amp;hashWriting != 0 {
+        throw(&amp;#34;concurrent map writes&amp;#34;)
+    }
+    alg := t.key.alg
+    hash := alg.hash(key, uintptr(h.hash0))
+
+    // Set hashWriting after calling alg.hash, since alg.hash may panic,
+    // in which case we have not actually done a write.
+    // 设置为写状态
+    h.flags |= hashWriting
+
+    // 如果bucket是nil的话，申请空间给buckets
+    if h.buckets == nil {
+        h.buckets = newarray(t.bucket, 1)
+    }
+
+again:
+    // 计算hash值 通过低位来确定bmap的位置
+    bucket := hash &amp;amp; (uintptr(1)&amp;lt;&amp;lt;h.B - 1)
+    if h.growing() {
+        growWork(t, h, bucket)
+    }
+    b := (*bmap)(unsafe.Pointer(uintptr(h.buckets) + bucket*uintptr(t.bucketsize)))
+    // 计算出top之后用于确定key在bucket中的位置
+    top := uint8(hash &amp;gt;&amp;gt; (sys.PtrSize*8 - 8))
+    if top &amp;lt; minTopHash {
+        top += minTopHash
+    }
+
+    // for 循环中的逻辑主要是为了确定插入的位置以及值
+    var inserti *uint8
+    var insertk unsafe.Pointer
+    var val unsafe.Pointer
+    for {
+        for i := uintptr(0); i &amp;lt; bucketCnt; i++ {
+            // bucket数组中的数据可能被删除过，有限将值插入到这些被删除的空间
+            if b.tophash[i] != top {
+                if b.tophash[i] == empty &amp;amp;&amp;amp; inserti == nil {
+                    inserti = &amp;amp;b.tophash[i]
+                    insertk = add(unsafe.Pointer(b), dataOffset+i*uintptr(t.keysize))
+                    val = add(unsafe.Pointer(b), dataOffset+bucketCnt*uintptr(t.keysize)+i*uintptr(t.valuesize))
+                }
+                continue
+            }
+            // 如果找到key 那么直接更新值
+            k := add(unsafe.Pointer(b), dataOffset+i*uintptr(t.keysize))
+            if t.indirectkey {
+                k = *((*unsafe.Pointer)(k))
+            }
+            if !alg.equal(key, k) {
+                continue
+            }
+            // already have a mapping for key. Update it.
+            if t.needkeyupdate {
+                typedmemmove(t.key, k, key)
+            }
+            val = add(unsafe.Pointer(b), dataOffset+bucketCnt*uintptr(t.keysize)+i*uintptr(t.valuesize))
+            goto done
+        }
+        // 满了 需要插入到overflow
+        ovf := b.overflow(t)
+        if ovf == nil {
+            break
+        }
+        b = ovf
+    }
+
+    // Did not find mapping for key. Allocate new cell &amp;amp; add entry.
+
+    // If we hit the max load factor or we have too many overflow buckets,
+    // and we&amp;#39;re not already in the middle of growing, start growing.
+    // 判断是否需要进行扩容 扩容的条件一个是count &amp;gt; loadfactor * (1 &amp;lt;&amp;lt; B) 或者overflow太多 
+    if !h.growing() &amp;amp;&amp;amp; (overLoadFactor(int64(h.count), h.B) || tooManyOverflowBuckets(h.noverflow, h.B)) {
+        hashGrow(t, h)
+        goto again // Growing the table invalidates everything, so try again
+    }
+
+    if inserti == nil {
+        // all current buckets are full, allocate a new one.
+        newb := h.newoverflow(t, b)
+        inserti = &amp;amp;newb.tophash[0]
+        insertk = add(unsafe.Pointer(newb), dataOffset)
+        val = add(insertk, bucketCnt*uintptr(t.keysize))
+    }
+
+    // store new key/value at insert position
+    if t.indirectkey {
+        kmem := newobject(t.key)
+        *(*unsafe.Pointer)(insertk) = kmem
+        insertk = kmem
+    }
+    if t.indirectvalue {
+        vmem := newobject(t.elem)
+        *(*unsafe.Pointer)(val) = vmem
+    }
+    // 执行赋值操作
+    typedmemmove(t.key, insertk, key)
+    *inserti = top
+    h.count++
+
+done:
+    if h.flags&amp;amp;hashWriting == 0 {
+        throw(&amp;#34;concurrent map writes&amp;#34;)
+    }
+    h.flags &amp;amp;^= hashWriting
+    if t.indirectvalue {
+        val = *((*unsafe.Pointer)(val))
+    }
+    return val
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;删除操作&#34;&gt;删除操作&lt;/h2&gt;
+
+&lt;p&gt;map的删除操作与赋值有点类似，只不过删除操作不会引起扩容,
+删除操作的处理过程其实就是找对应的桶，删除对应的值，并将tophash设置为empty&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;37
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;38
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;39
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;40
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;41
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;42
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;43
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;44
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;45
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;46
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;47
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;48
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;49
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;50
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;51
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;52
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;53
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;54
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;55
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;56
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;57
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;58
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;59
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;60
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;61
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;62
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;63
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;64
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;65
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;66
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;67
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;68
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;69
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;70
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;71
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;72
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;73
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;func mapdelete(t *maptype, h *hmap, key unsafe.Pointer) {
+    if raceenabled &amp;amp;&amp;amp; h != nil {
+        callerpc := getcallerpc(unsafe.Pointer(&amp;amp;t))
+        pc := funcPC(mapdelete)
+        racewritepc(unsafe.Pointer(h), callerpc, pc)
+        raceReadObjectPC(t.key, key, callerpc, pc)
+    }
+    if msanenabled &amp;amp;&amp;amp; h != nil {
+        msanread(key, t.key.size)
+    }
+    if h == nil || h.count == 0 {
+        return
+    }
+    if h.flags&amp;amp;hashWriting != 0 {
+        throw(&amp;#34;concurrent map writes&amp;#34;)
+    }
+
+    alg := t.key.alg
+    hash := alg.hash(key, uintptr(h.hash0))
+
+    // Set hashWriting after calling alg.hash, since alg.hash may panic,
+    // in which case we have not actually done a write (delete).
+    h.flags |= hashWriting
+    // 扩容工作是分步进行的
+    bucket := hash &amp;amp; (uintptr(1)&amp;lt;&amp;lt;h.B - 1)
+    if h.growing() {
+        growWork(t, h, bucket)
+    }
+    b := (*bmap)(unsafe.Pointer(uintptr(h.buckets) + bucket*uintptr(t.bucketsize)))
+    top := uint8(hash &amp;gt;&amp;gt; (sys.PtrSize*8 - 8))
+    if top &amp;lt; minTopHash {
+        top += minTopHash
+    }
+    for {
+        for i := uintptr(0); i &amp;lt; bucketCnt; i++ {
+            if b.tophash[i] != top {
+                continue
+            }
+            k := add(unsafe.Pointer(b), dataOffset+i*uintptr(t.keysize))
+            k2 := k
+            if t.indirectkey {
+                k2 = *((*unsafe.Pointer)(k2))
+            }
+            if !alg.equal(key, k2) {
+                continue
+            }
+            if t.indirectkey {
+                *(*unsafe.Pointer)(k) = nil
+            } else {
+                typedmemclr(t.key, k)
+            }
+            v := unsafe.Pointer(uintptr(unsafe.Pointer(b)) + dataOffset + bucketCnt*uintptr(t.keysize) + i*uintptr(t.valuesize))
+            if t.indirectvalue {
+                *(*unsafe.Pointer)(v) = nil
+            } else {
+                typedmemclr(t.elem, v)
+            }
+            b.tophash[i] = empty
+            h.count--
+            goto done
+        }
+        b = b.overflow(t)
+        if b == nil {
+            goto done
+        }
+    }
+
+done:
+    if h.flags&amp;amp;hashWriting == 0 {
+        throw(&amp;#34;concurrent map writes&amp;#34;)
+    }
+    h.flags &amp;amp;^= hashWriting
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;扩容操作&#34;&gt;扩容操作&lt;/h2&gt;
+
+&lt;p&gt;map在数据插入的时候回触发是否扩容，扩容的条件有两个：
+* 判断map的数量 loadFactor * (1&amp;lt;&lt;B), 即元素个数 &gt;= 桶个数 * 6.5
+* overflow 的桶是不是太多了，当 bucket 总数 &amp;lt; 2 ^ 15 时，如果 overflow 的 bucket 总数 &amp;gt;= bucket 的总数，
+那么我们认为 overflow 的桶太多了。当 bucket 总数 &amp;gt;= 2 ^ 15 时，那我们直接和 2 ^ 15 比较，overflow 的
+bucket &amp;gt;= 2 ^ 15 时，即认为溢出桶太多了。&lt;/p&gt;
+
+&lt;p&gt;针对上面的两种情况，官方使用两种不同的方式进行扩容的
+* 第一种就是分配新的bucket数组，大小为1&amp;lt;&amp;lt;(B+1)
+* 将hash值在原bucket中重新排列，让值排的跟紧凑一些&lt;/p&gt;
+
+&lt;p&gt;map的扩容不是一步完成的，而是的插入值和删除值的时候分步进行的 &lt;code&gt;growWork(t, h, bucket)&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;下面看下扩容的源代码&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;36
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;37
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;38
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;39
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;40
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;41
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;42
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;43
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;44
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;45
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;46
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;47
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;48
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;49
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;50
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;51
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;52
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;53
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;54
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;55
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;56
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;57
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;58
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;59
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;60
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;61
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;62
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;63
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;64
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;65
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;66
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;67
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;68
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;69
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;70
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;71
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;72
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;73
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;74
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;75
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;76
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;// 新建bucket底层数组，
+func makeBucketArray(t *maptype, b uint8) (buckets unsafe.Pointer, nextOverflow *bmap) {
+    base := uintptr(1 &amp;lt;&amp;lt; b)
+    nbuckets := base
+    // For small b, overflow buckets are unlikely.
+    // Avoid the overhead of the calculation.
+    // 对于小于4的map来说，我们认为没有overflow 可以减少一些内存计算
+    if b &amp;gt;= 4 {
+        // Add on the estimated number of overflow buckets
+        // required to insert the median number of elements
+        // used with this value of b.
+        nbuckets += 1 &amp;lt;&amp;lt; (b - 4)
+        sz := t.bucket.size * nbuckets
+        up := roundupsize(sz)
+        if up != sz {
+            nbuckets = up / t.bucket.size
+        }
+    }
+    buckets = newarray(t.bucket, int(nbuckets))
+    if base != nbuckets {
+        // We preallocated some overflow buckets.  
+        // 我们预先分配了一些overflow桶。
+        // To keep the overhead of tracking these overflow buckets to a minimum,
+        // 为了将tracking 这些overflow桶的开销保持在最低限度，
+        // we use the convention that if a preallocated overflow bucket&amp;#39;s overflow
+        // pointer is nil, then there are more available by bumping the pointer.
+        // We need a safe non-nil pointer for the last overflow bucket; just use buckets.
+        nextOverflow = (*bmap)(add(buckets, base*uintptr(t.bucketsize)))
+        last := (*bmap)(add(buckets, (nbuckets-1)*uintptr(t.bucketsize)))
+        last.setoverflow(t, (*bmap)(buckets))
+    }
+    return buckets, nextOverflow
+}
+
+func hashGrow(t *maptype, h *hmap) {
+    // If we&amp;#39;ve hit the load factor, get bigger.
+    // Otherwise, there are too many overflow buckets,
+    // so keep the same number of buckets and &amp;#34;grow&amp;#34; laterally.
+    bigger := uint8(1)
+    if !overLoadFactor(int64(h.count), h.B) {
+        bigger = 0
+        h.flags |= sameSizeGrow
+    }
+    oldbuckets := h.buckets
+    newbuckets, nextOverflow := makeBucketArray(t, h.B+bigger)
+
+    flags := h.flags &amp;amp;^ (iterator | oldIterator)
+    if h.flags&amp;amp;iterator != 0 {
+        flags |= oldIterator
+    }
+    // commit the grow (atomic wrt gc)
+    h.B += bigger
+    h.flags = flags
+    h.oldbuckets = oldbuckets
+    h.buckets = newbuckets
+    h.nevacuate = 0
+    h.noverflow = 0
+
+    if h.extra != nil &amp;amp;&amp;amp; h.extra.overflow[0] != nil {
+        // Promote current overflow buckets to the old generation.
+        if h.extra.overflow[1] != nil {
+            throw(&amp;#34;overflow is not nil&amp;#34;)
+        }
+        h.extra.overflow[1] = h.extra.overflow[0]
+        h.extra.overflow[0] = nil
+    }
+    if nextOverflow != nil {
+        if h.extra == nil {
+            h.extra = new(mapextra)
+        }
+        h.extra.nextOverflow = nextOverflow
+    }
+
+    // the actual copying of the hash table data is done incrementally
+    // by growWork() and evacuate().
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;  1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 35
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 36
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 37
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 38
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 39
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 40
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 41
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 42
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 43
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 44
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 45
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 46
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 47
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 48
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 49
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 50
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 51
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 52
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 53
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 54
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 55
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 56
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 57
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 58
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 59
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 60
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 61
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 62
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 63
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 64
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 65
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 66
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 67
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 68
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 69
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 70
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 71
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 72
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 73
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 74
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 75
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 76
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 77
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 78
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 79
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 80
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 81
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 82
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 83
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 84
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 85
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 86
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 87
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 88
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 89
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 90
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 91
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 92
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 93
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 94
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 95
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 96
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 97
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 98
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 99
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;100
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;101
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;102
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;103
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;104
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;105
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;106
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;107
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;108
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;109
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;110
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;111
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;112
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;113
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;114
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;115
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;116
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;117
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;118
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;119
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;120
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;121
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;122
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;123
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;124
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;125
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;126
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;127
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;128
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;129
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;130
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;131
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;132
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;133
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;134
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;135
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;136
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;137
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;138
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;139
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;140
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;141
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;142
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;143
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;144
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;145
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;146
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;147
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;148
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;149
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;150
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;151
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;152
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;153
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;154
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;155
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;156
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;157
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;158
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;159
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;160
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;161
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;162
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;163
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;164
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;165
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;166
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;167
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;168
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;169
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;170
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;171
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;func growWork(t *maptype, h *hmap, bucket uintptr) {
+    // make sure we evacuate the oldbucket corresponding
+    // to the bucket we&amp;#39;re about to use
+    evacuate(t, h, bucket&amp;amp;h.oldbucketmask())
+
+    // evacuate one more oldbucket to make progress on growing
+    if h.growing() {
+        evacuate(t, h, h.nevacuate)
+    }
+}
+
+func evacuate(t *maptype, h *hmap, oldbucket uintptr) {
+    b := (*bmap)(add(h.oldbuckets, oldbucket*uintptr(t.bucketsize)))
+    newbit := h.noldbuckets()
+    alg := t.key.alg
+    if !evacuated(b) {
+        // TODO: reuse overflow buckets instead of using new ones, if there
+        // is no iterator using the old buckets.  (If !oldIterator.)
+
+        var (
+            x, y   *bmap          // current low/high buckets in new map
+            xi, yi int            // key/val indices into x and y
+            xk, yk unsafe.Pointer // pointers to current x and y key storage
+            xv, yv unsafe.Pointer // pointers to current x and y value storage
+        )
+        x = (*bmap)(add(h.buckets, oldbucket*uintptr(t.bucketsize)))
+        xi = 0
+        xk = add(unsafe.Pointer(x), dataOffset)
+        xv = add(xk, bucketCnt*uintptr(t.keysize))
+        if !h.sameSizeGrow() {
+            // Only calculate y pointers if we&amp;#39;re growing bigger.
+            // Otherwise GC can see bad pointers.
+            y = (*bmap)(add(h.buckets, (oldbucket+newbit)*uintptr(t.bucketsize)))
+            yi = 0
+            yk = add(unsafe.Pointer(y), dataOffset)
+            yv = add(yk, bucketCnt*uintptr(t.keysize))
+        }
+        for ; b != nil; b = b.overflow(t) {
+            k := add(unsafe.Pointer(b), dataOffset)
+            v := add(k, bucketCnt*uintptr(t.keysize))
+            for i := 0; i &amp;lt; bucketCnt; i, k, v = i+1, add(k, uintptr(t.keysize)), add(v, uintptr(t.valuesize)) {
+                top := b.tophash[i]
+                if top == empty {
+                    b.tophash[i] = evacuatedEmpty
+                    continue
+                }
+                if top &amp;lt; minTopHash {
+                    throw(&amp;#34;bad map state&amp;#34;)
+                }
+                k2 := k
+                if t.indirectkey {
+                    k2 = *((*unsafe.Pointer)(k2))
+                }
+                useX := true
+                if !h.sameSizeGrow() {
+                    // Compute hash to make our evacuation decision (whether we need
+                    // to send this key/value to bucket x or bucket y).
+                    hash := alg.hash(k2, uintptr(h.hash0))
+                    if h.flags&amp;amp;iterator != 0 {
+                        if !t.reflexivekey &amp;amp;&amp;amp; !alg.equal(k2, k2) {
+                            // If key != key (NaNs), then the hash could be (and probably
+                            // will be) entirely different from the old hash. Moreover,
+                            // it isn&amp;#39;t reproducible. Reproducibility is required in the
+                            // presence of iterators, as our evacuation decision must
+                            // match whatever decision the iterator made.
+                            // Fortunately, we have the freedom to send these keys either
+                            // way. Also, tophash is meaningless for these kinds of keys.
+                            // We let the low bit of tophash drive the evacuation decision.
+                            // We recompute a new random tophash for the next level so
+                            // these keys will get evenly distributed across all buckets
+                            // after multiple grows.
+                            if top&amp;amp;1 != 0 {
+                                hash |= newbit
+                            } else {
+                                hash &amp;amp;^= newbit
+                            }
+                            top = uint8(hash &amp;gt;&amp;gt; (sys.PtrSize*8 - 8))
+                            if top &amp;lt; minTopHash {
+                                top += minTopHash
+                            }
+                        }
+                    }
+                    useX = hash&amp;amp;newbit == 0
+                }
+                if useX {
+                    b.tophash[i] = evacuatedX
+                    if xi == bucketCnt {
+                        newx := h.newoverflow(t, x)
+                        x = newx
+                        xi = 0
+                        xk = add(unsafe.Pointer(x), dataOffset)
+                        xv = add(xk, bucketCnt*uintptr(t.keysize))
+                    }
+                    x.tophash[xi] = top
+                    if t.indirectkey {
+                        *(*unsafe.Pointer)(xk) = k2 // copy pointer
+                    } else {
+                        typedmemmove(t.key, xk, k) // copy value
+                    }
+                    if t.indirectvalue {
+                        *(*unsafe.Pointer)(xv) = *(*unsafe.Pointer)(v)
+                    } else {
+                        typedmemmove(t.elem, xv, v)
+                    }
+                    xi++
+                    xk = add(xk, uintptr(t.keysize))
+                    xv = add(xv, uintptr(t.valuesize))
+                } else {
+                    b.tophash[i] = evacuatedY
+                    if yi == bucketCnt {
+                        newy := h.newoverflow(t, y)
+                        y = newy
+                        yi = 0
+                        yk = add(unsafe.Pointer(y), dataOffset)
+                        yv = add(yk, bucketCnt*uintptr(t.keysize))
+                    }
+                    y.tophash[yi] = top
+                    if t.indirectkey {
+                        *(*unsafe.Pointer)(yk) = k2
+                    } else {
+                        typedmemmove(t.key, yk, k)
+                    }
+                    if t.indirectvalue {
+                        *(*unsafe.Pointer)(yv) = *(*unsafe.Pointer)(v)
+                    } else {
+                        typedmemmove(t.elem, yv, v)
+                    }
+                    yi++
+                    yk = add(yk, uintptr(t.keysize))
+                    yv = add(yv, uintptr(t.valuesize))
+                }
+            }
+        }
+        // Unlink the overflow buckets &amp;amp; clear key/value to help GC.
+        if h.flags&amp;amp;oldIterator == 0 {
+            b = (*bmap)(add(h.oldbuckets, oldbucket*uintptr(t.bucketsize)))
+            // Preserve b.tophash because the evacuation
+            // state is maintained there.
+            if t.bucket.kind&amp;amp;kindNoPointers == 0 {
+                memclrHasPointers(add(unsafe.Pointer(b), dataOffset), uintptr(t.bucketsize)-dataOffset)
+            } else {
+                memclrNoHeapPointers(add(unsafe.Pointer(b), dataOffset), uintptr(t.bucketsize)-dataOffset)
+            }
+        }
+    }
+
+    // Advance evacuation mark
+    if oldbucket == h.nevacuate {
+        h.nevacuate = oldbucket + 1
+        // Experiments suggest that 1024 is overkill by at least an order of magnitude.
+        // Put it in there as a safeguard anyway, to ensure O(1) behavior.
+        stop := h.nevacuate + 1024
+        if stop &amp;gt; newbit {
+            stop = newbit
+        }
+        for h.nevacuate != stop &amp;amp;&amp;amp; bucketEvacuated(t, h, h.nevacuate) {
+            h.nevacuate++
+        }
+        if h.nevacuate == newbit { // newbit == # of oldbuckets
+            // Growing is all done. Free old main bucket array.
+            h.oldbuckets = nil
+            // Can discard old overflow buckets as well.
+            // If they are still referenced by an iterator,
+            // then the iterator holds a pointers to the slice.
+            if h.extra != nil {
+                h.extra.overflow[1] = nil
+            }
+            h.flags &amp;amp;^= sameSizeGrow
+        }
+    }
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;map 扩容原理可以看下 &lt;a href=&#34;https://www.jianshu.com/p/aa0d4808cbb8&#34;&gt;https://www.jianshu.com/p/aa0d4808cbb8&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://blog.yiz96.com/golang-map/&#34;&gt;https://blog.yiz96.com/golang-map/&lt;/a&gt;
+&lt;a href=&#34;https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html&#34;&gt;https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html&lt;/a&gt;
+&lt;a href=&#34;https://github.com/cch123/golang-notes/blob/master/map.md&#34;&gt;https://github.com/cch123/golang-notes/blob/master/map.md&lt;/a&gt;
+&lt;a href=&#34;https://www.jianshu.com/p/aa0d4808cbb8&#34;&gt;https://www.jianshu.com/p/aa0d4808cbb8&lt;/a&gt;&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
       <title>golang reflect 剖析</title>
       <link>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</link>
       <pubDate>Thu, 14 Mar 2019 00:00:00 +0000</pubDate>

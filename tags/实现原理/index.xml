@@ -6,10 +6,19 @@
     <description>Recent content in 实现原理 on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 14 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 18 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>golang map 剖析</title>
+      <link>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</link>
+      <pubDate>Mon, 18 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</guid>
+      <description>前言 map在工作中用的还是很多的，可以通过学习map的源码实现来避免很多的坑。以及实现原理。 map 主要需要掌握的就是初始化make、插入、查找、</description>
+    </item>
     
     <item>
       <title>golang reflect 剖析</title>
