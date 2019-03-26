@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</loc>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</loc>
     <lastmod>2019-03-18T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -39,7 +46,7 @@
   
   <url>
     <loc>https://jayhong.github.io/post/20190306-golang%E5%8F%8D%E5%B0%84/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-06T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -53,7 +60,7 @@
   
   <url>
     <loc>https://jayhong.github.io/tags/blog/</loc>
-    <lastmod>2019-03-18T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -73,14 +80,14 @@
   
   <url>
     <loc>https://jayhong.github.io/tags/golang/</loc>
-    <lastmod>2019-03-18T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</loc>
-    <lastmod>2019-03-18T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -94,21 +101,28 @@
   
   <url>
     <loc>https://jayhong.github.io/post/</loc>
-    <lastmod>2019-03-18T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://jayhong.github.io/tags/reflect/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-06T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://jayhong.github.io/tags/slice/</loc>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://jayhong.github.io/tags/</loc>
-    <lastmod>2019-03-18T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -122,14 +136,14 @@
   
   <url>
     <loc>https://jayhong.github.io/tags/%E5%8F%8D%E5%B0%84/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-06T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</loc>
-    <lastmod>2019-03-18T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -142,14 +156,14 @@
   </url>
   
   <url>
-    <loc>https://jayhong.github.io/categories/%E6%9D%82%E8%B0%88/</loc>
+    <loc>https://jayhong.github.io/tags/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://jayhong.github.io/tags/%E6%9D%82%E8%B0%88/</loc>
+    <loc>https://jayhong.github.io/categories/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>

@@ -6,7 +6,8 @@
     <description>Recent content in Tags on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 18 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <copyright>jayhong</copyright>
+    <lastBuildDate>Wed, 20 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://jayhong.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,7 +15,7 @@
     <item>
       <title>Blog</title>
       <link>https://jayhong.github.io/tags/blog/</link>
-      <pubDate>Mon, 18 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/tags/blog/</guid>
       <description></description>
@@ -32,7 +33,7 @@
     <item>
       <title>Golang</title>
       <link>https://jayhong.github.io/tags/golang/</link>
-      <pubDate>Mon, 18 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/tags/golang/</guid>
       <description></description>
@@ -50,16 +51,25 @@
     <item>
       <title>Reflect</title>
       <link>https://jayhong.github.io/tags/reflect/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/tags/reflect/</guid>
       <description></description>
     </item>
     
     <item>
+      <title>Slice</title>
+      <link>https://jayhong.github.io/tags/slice/</link>
+      <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/tags/slice/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>反射</title>
       <link>https://jayhong.github.io/tags/%E5%8F%8D%E5%B0%84/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/tags/%E5%8F%8D%E5%B0%84/</guid>
       <description></description>
@@ -68,7 +78,7 @@
     <item>
       <title>实现原理</title>
       <link>https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
-      <pubDate>Mon, 18 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
       <description></description>

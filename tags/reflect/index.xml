@@ -6,7 +6,8 @@
     <description>Recent content in Reflect on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 05 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <copyright>jayhong</copyright>
+    <lastBuildDate>Wed, 06 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://jayhong.github.io/tags/reflect/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,7 +15,7 @@
     <item>
       <title>[转]golang 反射</title>
       <link>https://jayhong.github.io/post/20190306-golang%E5%8F%8D%E5%B0%84/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/post/20190306-golang%E5%8F%8D%E5%B0%84/</guid>
       <description>转自 https://juejin.im/post/5a75a4fb5188257a82110544#heading-2 什么是反射 反射在计算机领域是一种能够通过类型来检查自己的值的能力，在golang中反射提供了一种机制在运行时更新变量和检查它们的值、调</description>

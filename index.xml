@@ -6,6 +6,7 @@
     <description>Recent content on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
+    <copyright>jayhong</copyright>
     <lastBuildDate>Mon, 04 Mar 2019 21:38:52 +0800</lastBuildDate>
     
         <atom:link href="https://jayhong.github.io/index.xml" rel="self" type="application/rss+xml" />
@@ -21,6 +22,653 @@
         <description>&lt;ul&gt;
 &lt;li&gt;Golang 程序员，喜欢技术，热爱钻研。&lt;/li&gt;
 &lt;/ul&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>golang slice 剖析</title>
+      <link>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</link>
+      <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;slice-介绍&#34;&gt;slice 介绍&lt;/h2&gt;
+
+&lt;p&gt;golang中有一种比较特殊的类型slice， slice是可以动态扩容的数组，slice有时候我会错误的把它说成是数组，在golang中slice和数组还是有很大的区别的。
+在看slice的源码之前，我们可以先看下一下两段代码，看下会输出什么内容&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;kn&#34;&gt;package&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;main&lt;/span&gt;
+
+&lt;span class=&#34;kn&#34;&gt;import&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+
+&lt;span class=&#34;kd&#34;&gt;func&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[]&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;7&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;9&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;11&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;y&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;12&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;Println&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;再看另外一段代码&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;kn&#34;&gt;package&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;main&lt;/span&gt;
+
+&lt;span class=&#34;kn&#34;&gt;import&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+
+&lt;span class=&#34;kd&#34;&gt;func&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(){&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;make&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([][]&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+        &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[]&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+    &lt;span class=&#34;nx&#34;&gt;s1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;6&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+    &lt;span class=&#34;nx&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;Println&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;Println&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;以下代码基于go 1.11&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;slice-源码&#34;&gt;slice 源码&lt;/h2&gt;
+
+&lt;p&gt;slice代码在 &lt;code&gt;runtime/slice.go&lt;/code&gt;中&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;type slice struct {
+    array unsafe.Pointer
+    len   int
+    cap   int
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;在golang 中slice使用一个底层数组，一个长度len和一个容量cap构成的。&lt;/p&gt;
+
+&lt;h3 id=&#34;makeslice&#34;&gt;makeslice&lt;/h3&gt;
+
+&lt;p&gt;makeslice 接受三个参数，slice元素的类型，长度以及容量。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;// MulUintptr returns a * b and whether the multiplication overflowed.
+// On supported platforms this is an intrinsic lowered by the compiler.
+// MulUintptr 返回a*b的值，是否溢出。
+func MulUintptr(a, b uintptr) (uintptr, bool) {
+    // a|b &amp;lt; 1&amp;lt;&amp;lt;(4*sys.PtrSize) why
+    if a|b &amp;lt; 1&amp;lt;&amp;lt;(4*sys.PtrSize) || a == 0 {
+        return a * b, false
+    }
+    // 机器允许的最大容量除以类型的大小
+    overflow := b &amp;gt; MaxUintptr/a
+    return a * b, overflow
+}
+
+func makeslice(et *_type, len, cap int) unsafe.Pointer {
+    mem, overflow := math.MulUintptr(et.size, uintptr(cap))
+    if overflow || mem &amp;gt; maxAlloc || len &amp;lt; 0 || len &amp;gt; cap {
+        // NOTE: Produce a &amp;#39;len out of range&amp;#39; error instead of a
+        // &amp;#39;cap out of range&amp;#39; error when someone does make([]T, bignumber).
+        // &amp;#39;cap out of range&amp;#39; is true too, but since the cap is only being
+        // supplied implicitly, saying len is clearer.
+        // See golang.org/issue/4085.
+        mem, overflow := math.MulUintptr(et.size, uintptr(len))
+        if overflow || mem &amp;gt; maxAlloc || len &amp;lt; 0 {
+            panicmakeslicelen()
+        }
+        panicmakeslicecap()
+    }
+
+    //分配内存
+    return mallocgc(mem, et, true)
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;另外还有一个makeslice64 只是多了将int64 转为int的步骤&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;访问slice中的数据是通过slice来控制范围的。不允许越界访问&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;growslice&#34;&gt;growslice&lt;/h3&gt;
+
+&lt;p&gt;growslice需要知道的就是他的扩容策略，以及et.kind 为非指针的时候的处理&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;  1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;  9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 35
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 36
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 37
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 38
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 39
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 40
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 41
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 42
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 43
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 44
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 45
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 46
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 47
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 48
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 49
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 50
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 51
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 52
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 53
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 54
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 55
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 56
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 57
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 58
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 59
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 60
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 61
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 62
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 63
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 64
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 65
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 66
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 67
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 68
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 69
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 70
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 71
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 72
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 73
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 74
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 75
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 76
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 77
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 78
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 79
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 80
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 81
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 82
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 83
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 84
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 85
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 86
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 87
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 88
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 89
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 90
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 91
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 92
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 93
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 94
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 95
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 96
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 97
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 98
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 99
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;100
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;101
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;102
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;103
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;104
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;105
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;106
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;107
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;108
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;109
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;110
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;111
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;112
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;113
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;114
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;115
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;116
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;117
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;118
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;119
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;120
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;121
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;122
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;123
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;124
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;125
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;126
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;127
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;128
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;129
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;130
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;131
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;// growslice handles slice growth during append.
+// It is passed the slice element type, the old slice, and the desired new minimum capacity,
+// and it returns a new slice with at least that capacity, with the old data
+// copied into it.
+// The new slice&amp;#39;s length is set to the old slice&amp;#39;s length,
+// NOT to the new requested capacity.
+// This is for codegen convenience. The old slice&amp;#39;s length is used immediately
+// to calculate where to write new values during an append.
+// TODO: When the old backend is gone, reconsider this decision.
+// The SSA backend might prefer the new length or to return only ptr/cap and save stack space.
+func growslice(et *_type, old slice, cap int) slice {
+    if raceenabled {
+        callerpc := getcallerpc()
+        racereadrangepc(old.array, uintptr(old.len*int(et.size)), callerpc, funcPC(growslice))
+    }
+    if msanenabled {
+        msanread(old.array, uintptr(old.len*int(et.size)))
+    }
+    // 期望的容量小于旧slice的容量
+    if cap &amp;lt; old.cap {
+        panic(errorString(&amp;#34;growslice: cap out of range&amp;#34;))
+    }
+
+    if et.size == 0 {
+        // append should not create a slice with nil pointer but non-zero len.
+        // We assume that append doesn&amp;#39;t need to preserve old.array in this case.
+        //append不应该创建一个带有nil指针但非零len的切片。我们假设append在这种情况下不需要保留old.array。
+        return slice{unsafe.Pointer(&amp;amp;zerobase), old.len, cap}
+    }
+
+    // 新slice cap的确定方法，当小于1024 的时候直接double，大于1024 每次增加1/4
+    newcap := old.cap
+    doublecap := newcap + newcap
+    if cap &amp;gt; doublecap {
+        newcap = cap
+    } else {
+        if old.len &amp;lt; 1024 {
+            newcap = doublecap
+        } else {
+            // Check 0 &amp;lt; newcap to detect overflow
+            // and prevent an infinite loop.
+            for 0 &amp;lt; newcap &amp;amp;&amp;amp; newcap &amp;lt; cap {
+                newcap += newcap / 4
+            }
+            // Set newcap to the requested cap when
+            // the newcap calculation overflowed.
+            if newcap &amp;lt;= 0 {
+                newcap = cap
+            }
+        }
+    }
+
+    // 计算新切片的大小容量 是否溢出
+    var overflow bool
+    var lenmem, newlenmem, capmem uintptr
+    // Specialize for common values of et.size.
+    // For 1 we don&amp;#39;t need any division/multiplication.
+    // For sys.PtrSize, compiler will optimize division/multiplication into a shift by a constant.
+    // For powers of 2, use a variable shift.
+    switch {
+    case et.size == 1:
+        lenmem = uintptr(old.len)
+        newlenmem = uintptr(cap)
+        capmem = roundupsize(uintptr(newcap))
+        overflow = uintptr(newcap) &amp;gt; maxAlloc
+        newcap = int(capmem)
+    case et.size == sys.PtrSize:
+        lenmem = uintptr(old.len) * sys.PtrSize
+        newlenmem = uintptr(cap) * sys.PtrSize
+        capmem = roundupsize(uintptr(newcap) * sys.PtrSize)
+        overflow = uintptr(newcap) &amp;gt; maxAlloc/sys.PtrSize
+        newcap = int(capmem / sys.PtrSize)
+    case isPowerOfTwo(et.size):
+        var shift uintptr
+        if sys.PtrSize == 8 {
+            // Mask shift for better code generation.
+            shift = uintptr(sys.Ctz64(uint64(et.size))) &amp;amp; 63
+        } else {
+            shift = uintptr(sys.Ctz32(uint32(et.size))) &amp;amp; 31
+        }
+        lenmem = uintptr(old.len) &amp;lt;&amp;lt; shift
+        newlenmem = uintptr(cap) &amp;lt;&amp;lt; shift
+        capmem = roundupsize(uintptr(newcap) &amp;lt;&amp;lt; shift)
+        overflow = uintptr(newcap) &amp;gt; (maxAlloc &amp;gt;&amp;gt; shift)
+        newcap = int(capmem &amp;gt;&amp;gt; shift)
+    default:
+        lenmem = uintptr(old.len) * et.size
+        newlenmem = uintptr(cap) * et.size
+        capmem, overflow = math.MulUintptr(et.size, uintptr(newcap))
+        capmem = roundupsize(capmem)
+        newcap = int(capmem / et.size)
+    }
+
+    // The check of overflow in addition to capmem &amp;gt; maxAlloc is needed
+    // to prevent an overflow which can be used to trigger a segfault
+    // on 32bit architectures with this example program:
+    //
+    // type T [1&amp;lt;&amp;lt;27 + 1]int64
+    //
+    // var d T
+    // var s []T
+    //
+    // func main() {
+    //   s = append(s, d, d, d, d)
+    //   print(len(s), &amp;#34;\n&amp;#34;)
+    // }
+    if overflow || capmem &amp;gt; maxAlloc {
+        panic(errorString(&amp;#34;growslice: cap out of range&amp;#34;))
+    }
+
+    var p unsafe.Pointer
+    // 元素类型为非指针的时候可以只清空cap到newlenmen之间的值
+    if et.kind&amp;amp;kindNoPointers != 0 {
+        p = mallocgc(capmem, nil, false)
+        // The append() that calls growslice is going to overwrite from old.len to cap (which will be the new length).
+        // Only clear the part that will not be overwritten.
+        memclrNoHeapPointers(add(p, newlenmem), capmem-newlenmem)
+    } else {
+        // Note: can&amp;#39;t use rawmem (which avoids zeroing of memory), because then GC can scan uninitialized memory.
+        p = mallocgc(capmem, et, true)
+        // 判断写屏障是否开启了，通过迭代讲旧数组中的指针屏蔽掉，之后就不会被gc扫描到
+        if writeBarrier.enabled {
+            // Only shade the pointers in old.array since we know the destination slice p
+            // only contains nil pointers because it has been cleared during alloc.
+            bulkBarrierPreWriteSrcOnly(uintptr(p), uintptr(old.array), lenmem)
+        }
+    }
+    memmove(p, old.array, lenmem)
+
+    return slice{p, old.len, newcap}
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;slice-copy&#34;&gt;slice copy&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;26
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;27
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;28
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;29
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;30
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;31
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;32
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;33
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;34
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;35
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;func slicecopy(to, fm slice, width uintptr) int {
+    if fm.len == 0 || to.len == 0 {
+        return 0
+    }
+
+    n := fm.len
+    if to.len &amp;lt; n {
+        n = to.len
+    }
+
+    if width == 0 {
+        return n
+    }
+
+    if raceenabled {
+        callerpc := getcallerpc()
+        pc := funcPC(slicecopy)
+        racewriterangepc(to.array, uintptr(n*int(width)), callerpc, pc)
+        racereadrangepc(fm.array, uintptr(n*int(width)), callerpc, pc)
+    }
+    if msanenabled {
+        msanwrite(to.array, uintptr(n*int(width)))
+        msanread(fm.array, uintptr(n*int(width)))
+    }
+
+    size := uintptr(n) * width
+    // 如果size为1 直接将底层array的值复制过去，如果大于1 调用memmove 进行复制
+    if size == 1 { // common case worth about 2x to do here
+        // TODO: is this still worth it with new memmove impl?
+        *(*byte)(to.array) = *(*byte)(fm.array) // known to be a byte pointer
+    } else {
+        memmove(to.array, fm.array, size)
+    }
+    return n
+}&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;slice中的一些坑&#34;&gt;slice中的一些坑&lt;/h2&gt;
+
+&lt;p&gt;在开发过程中，使用slice如果不注意很容易入坑。下来列举一下我看到以及遇到的一些坑&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;slice是否扩容是有len和cap决定的，slice下标操作不能超过len。&lt;/li&gt;
+&lt;li&gt;将一个slice赋值给其他的slice的时候，作为函数入参的时候，底层数组共享的是同一个，但是各个slice有各自len和cap&lt;/li&gt;
+&lt;li&gt;slice在&lt;code&gt;for v, i range slice&lt;/code&gt;操作的时候, 要注意v是同一个临时对象，使用v的时候要注意&lt;/li&gt;
+&lt;li&gt;扩容的策略&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;下面看看开头两段程序的输出&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;程序1&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;kn&#34;&gt;package&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;main&lt;/span&gt;
+
+&lt;span class=&#34;kn&#34;&gt;import&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+
+&lt;span class=&#34;kd&#34;&gt;func&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[]&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;7&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;9&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;11&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;y&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;12&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;Println&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;y&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;[5 7 9] [5 7 9 12] [5 7 9 12]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;append 操作会生成一个新的slice，会有新的len，如果append触发了扩容的话也会更新cap。在上面的代码中，第7行，第8行的append都触发了扩容操作，并且将产生的新的slice赋给了s
+所以s变成了一个len为3 cap为4的切片。第9行 &lt;code&gt;x:=append(s，11)&lt;/code&gt; 会将s底层数组的第四个元素设置为11，执行之后并不会更新s的len和cap。 &lt;code&gt;y := append(s, 12)&lt;/code&gt;将第四个元素设置为12。
+所以将11覆盖掉了&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;程序2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;kn&#34;&gt;package&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;main&lt;/span&gt;
+
+&lt;span class=&#34;kn&#34;&gt;import&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+
+&lt;span class=&#34;kd&#34;&gt;func&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(){&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;make&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([][]&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+        &lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[]&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+    &lt;span class=&#34;nx&#34;&gt;s1&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;append&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;6&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+    &lt;span class=&#34;nx&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;Println&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;nx&#34;&gt;fmt&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;Println&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;s1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;[[1 0 0 0] [1 0 0 0] [1 0 0 0] [1 0 0 0]]
+[1 0 0 0 6]&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;这段代码与上面那一段的原因类似。append操作产生的新slice并没有赋值给原来的slice，而是赋值给一个新的slice。但是因为旧slice并没有改变，所以s保持原来的样子&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://halfrost.com/go_slice/&#34;&gt;https://halfrost.com/go_slice/&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://jiajunhuang.com/articles/2017_07_18-golang_slice.md.html&#34;&gt;https://jiajunhuang.com/articles/2017_07_18-golang_slice.md.html&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://jsharkc.github.io/2017/07/10/Slice%E6%9C%BA%E5%88%B6/&#34;&gt;https://jsharkc.github.io/2017/07/10/Slice%E6%9C%BA%E5%88%B6/&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://github.com/EDDYCJY/blog/blob/master/golang/pkg/2018-12-11-%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Go-Slice.md&#34;&gt;https://github.com/EDDYCJY/blog/blob/master/golang/pkg/2018-12-11-%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Go-Slice.md&lt;/a&gt;&lt;/p&gt;
 </description>
       
     </item>
@@ -45,8 +693,8 @@ map 主要需要掌握的就是初始化make、插入、查找、扩容、range�
 &lt;ul&gt;
 &lt;li&gt;1、判断类型的大小与sizeof的大小是否一致（why）&lt;/li&gt;
 &lt;li&gt;2、判断key和value的大小以及根据hint确定B的大小&lt;br /&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;3、如果hint是不为0，会分配一个bucket array数组，如果为0，是使用lazyinit的方式在赋值的时候才进行初始化&lt;/p&gt;
+&lt;li&gt;3、如果hint是不为0，会分配一个bucket array数组，如果为0，是使用lazyinit的方式在赋值的时候才进行初始化&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
 &lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
 &lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
@@ -145,92 +793,90 @@ map 主要需要掌握的就是初始化make、插入、查找、扩容、range�
 // If h != nil, the map can be created directly in h.
 // If bucket != nil, bucket can be used as the first bucket.
 func makemap(t *maptype, hint int64, h *hmap, bucket unsafe.Pointer) *hmap {
-if sz := unsafe.Sizeof(hmap{}); sz &amp;gt; 48 || sz != t.hmap.size {
-    println(&amp;#34;runtime: sizeof(hmap) =&amp;#34;, sz, &amp;#34;, t.hmap.size =&amp;#34;, t.hmap.size)
-    throw(&amp;#34;bad hmap size&amp;#34;)
-}
-
-if hint &amp;lt; 0 || hint &amp;gt; int64(maxSliceCap(t.bucket.size)) {
-    hint = 0
-}
-
-if !ismapkey(t.key) {
-    throw(&amp;#34;runtime.makemap: unsupported map key type&amp;#34;)
-}
-
-// check compiler&amp;#39;s and reflect&amp;#39;s math
-if t.key.size &amp;gt; maxKeySize &amp;amp;&amp;amp; (!t.indirectkey || t.keysize != uint8(sys.PtrSize)) ||
-    t.key.size &amp;lt;= maxKeySize &amp;amp;&amp;amp; (t.indirectkey || t.keysize != uint8(t.key.size)) {
-    throw(&amp;#34;key size wrong&amp;#34;)
-}
-if t.elem.size &amp;gt; maxValueSize &amp;amp;&amp;amp; (!t.indirectvalue || t.valuesize != uint8(sys.PtrSize)) ||
-    t.elem.size &amp;lt;= maxValueSize &amp;amp;&amp;amp; (t.indirectvalue || t.valuesize != uint8(t.elem.size)) {
-    throw(&amp;#34;value size wrong&amp;#34;)
-}
-
-// invariants we depend on. We should probably check these at compile time
-// somewhere, but for now we&amp;#39;ll do it here.
-if t.key.align &amp;gt; bucketCnt {
-    throw(&amp;#34;key align too big&amp;#34;)
-}
-if t.elem.align &amp;gt; bucketCnt {
-    throw(&amp;#34;value align too big&amp;#34;)
-}
-if t.key.size%uintptr(t.key.align) != 0 {
-    throw(&amp;#34;key size not a multiple of key align&amp;#34;)
-}
-if t.elem.size%uintptr(t.elem.align) != 0 {
-    throw(&amp;#34;value size not a multiple of value align&amp;#34;)
-}
-if bucketCnt &amp;lt; 8 {
-    throw(&amp;#34;bucketsize too small for proper alignment&amp;#34;)
-}
-if dataOffset%uintptr(t.key.align) != 0 {
-    throw(&amp;#34;need padding in bucket (key)&amp;#34;)
-}
-if dataOffset%uintptr(t.elem.align) != 0 {
-    throw(&amp;#34;need padding in bucket (value)&amp;#34;)
-}
-
-// find size parameter which will hold the requested # of elements
-B := uint8(0)
-for ; overLoadFactor(hint, B); B++ {
-}
-
-// allocate initial hash table
-// if B == 0, the buckets field is allocated lazily later (in mapassign)
-// If hint is large zeroing this memory could take a while.
-buckets := bucket
-var extra *mapextra
-if B != 0 {
-    var nextOverflow *bmap
-    buckets, nextOverflow = makeBucketArray(t, B)
-    if nextOverflow != nil {
-        extra = new(mapextra)
-        extra.nextOverflow = nextOverflow
+    if sz := unsafe.Sizeof(hmap{}); sz &amp;gt; 48 || sz != t.hmap.size {
+        println(&amp;#34;runtime: sizeof(hmap) =&amp;#34;, sz, &amp;#34;, t.hmap.size =&amp;#34;, t.hmap.size)
+        throw(&amp;#34;bad hmap size&amp;#34;)
     }
-}
 
-// initialize Hmap
-if h == nil {
-    h = (*hmap)(newobject(t.hmap))
-}
-h.count = 0
-h.B = B
-h.extra = extra
-h.flags = 0
-h.hash0 = fastrand()
-h.buckets = buckets
-h.oldbuckets = nil
-h.nevacuate = 0
-h.noverflow = 0
+    if hint &amp;lt; 0 || hint &amp;gt; int64(maxSliceCap(t.bucket.size)) {
+        hint = 0
+    }
 
-return h
+    if !ismapkey(t.key) {
+        throw(&amp;#34;runtime.makemap: unsupported map key type&amp;#34;)
+    }
+
+    // check compiler&amp;#39;s and reflect&amp;#39;s math
+    if t.key.size &amp;gt; maxKeySize &amp;amp;&amp;amp; (!t.indirectkey || t.keysize != uint8(sys.PtrSize)) ||
+        t.key.size &amp;lt;= maxKeySize &amp;amp;&amp;amp; (t.indirectkey || t.keysize != uint8(t.key.size)) {
+        throw(&amp;#34;key size wrong&amp;#34;)
+    }
+    if t.elem.size &amp;gt; maxValueSize &amp;amp;&amp;amp; (!t.indirectvalue || t.valuesize != uint8(sys.PtrSize)) ||
+        t.elem.size &amp;lt;= maxValueSize &amp;amp;&amp;amp; (t.indirectvalue || t.valuesize != uint8(t.elem.size)) {
+        throw(&amp;#34;value size wrong&amp;#34;)
+    }
+
+    // invariants we depend on. We should probably check these at compile time
+    // somewhere, but for now we&amp;#39;ll do it here.
+    if t.key.align &amp;gt; bucketCnt {
+        throw(&amp;#34;key align too big&amp;#34;)
+    }
+    if t.elem.align &amp;gt; bucketCnt {
+        throw(&amp;#34;value align too big&amp;#34;)
+    }
+    if t.key.size%uintptr(t.key.align) != 0 {
+        throw(&amp;#34;key size not a multiple of key align&amp;#34;)
+    }
+    if t.elem.size%uintptr(t.elem.align) != 0 {
+        throw(&amp;#34;value size not a multiple of value align&amp;#34;)
+    }
+    if bucketCnt &amp;lt; 8 {
+        throw(&amp;#34;bucketsize too small for proper alignment&amp;#34;)
+    }
+    if dataOffset%uintptr(t.key.align) != 0 {
+        throw(&amp;#34;need padding in bucket (key)&amp;#34;)
+    }
+    if dataOffset%uintptr(t.elem.align) != 0 {
+        throw(&amp;#34;need padding in bucket (value)&amp;#34;)
+    }
+
+    // find size parameter which will hold the requested # of elements
+    B := uint8(0)
+    for ; overLoadFactor(hint, B); B++ {
+    }
+
+    // allocate initial hash table
+    // if B == 0, the buckets field is allocated lazily later (in mapassign)
+    // If hint is large zeroing this memory could take a while.
+    buckets := bucket
+    var extra *mapextra
+    if B != 0 {
+        var nextOverflow *bmap
+        buckets, nextOverflow = makeBucketArray(t, B)
+        if nextOverflow != nil {
+            extra = new(mapextra)
+            extra.nextOverflow = nextOverflow
+        }
+    }
+
+    // initialize Hmap
+    if h == nil {
+        h = (*hmap)(newobject(t.hmap))
+    }
+    h.count = 0
+    h.B = B
+    h.extra = extra
+    h.flags = 0
+    h.hash0 = fastrand()
+    h.buckets = buckets
+    h.oldbuckets = nil
+    h.nevacuate = 0
+    h.noverflow = 0
+
+    return h
 }&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
+&lt;/div&gt;
 &lt;h2 id=&#34;元素访问-mapassess&#34;&gt;元素访问&lt;code&gt;mapassess&lt;/code&gt;&lt;/h2&gt;
 
 &lt;p&gt;实现上有 mapaccess1，mapaccess2，mapaccessK 几个方法，但几个方法都差不多，只差别在返回内容上。mapaccess1 和 mapaccess2 同时有 32 位、64 位和 string 类型的变种:&lt;/p&gt;
@@ -785,15 +1431,19 @@ done:
 &lt;/div&gt;
 &lt;h2 id=&#34;扩容操作&#34;&gt;扩容操作&lt;/h2&gt;
 
-&lt;p&gt;map在数据插入的时候回触发是否扩容，扩容的条件有两个：
-* 判断map的数量 loadFactor * (1&amp;lt;&lt;B), 即元素个数 &gt;= 桶个数 * 6.5
-* overflow 的桶是不是太多了，当 bucket 总数 &amp;lt; 2 ^ 15 时，如果 overflow 的 bucket 总数 &amp;gt;= bucket 的总数，
-那么我们认为 overflow 的桶太多了。当 bucket 总数 &amp;gt;= 2 ^ 15 时，那我们直接和 2 ^ 15 比较，overflow 的
-bucket &amp;gt;= 2 ^ 15 时，即认为溢出桶太多了。&lt;/p&gt;
+&lt;p&gt;map在数据插入的时候回触发是否扩容，扩容的条件有两个:&lt;/p&gt;
 
-&lt;p&gt;针对上面的两种情况，官方使用两种不同的方式进行扩容的
-* 第一种就是分配新的bucket数组，大小为1&amp;lt;&amp;lt;(B+1)
-* 将hash值在原bucket中重新排列，让值排的跟紧凑一些&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;判断map的数量 loadFactor * (1&amp;lt;&lt;B), 即元素个数 &gt;= 桶个数 * 6.5&lt;/li&gt;
+&lt;li&gt;overflow 的桶是不是太多了，当 bucket 总数 &amp;lt; 2 ^ 15 时，如果 overflow 的 bucket 总数 &amp;gt;= bucket 的总数，那么我们认为 overflow 的桶太多了。当 bucket 总数 &amp;gt;= 2 ^ 15 时，那我们直接和 2 ^ 15 比较，overflow 的bucket &amp;gt;= 2 ^ 15 时，即认为溢出桶太多了。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;针对上面的两种情况，官方使用两种不同的方式进行扩容的:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;第一种就是分配新的bucket数组，大小为1&amp;lt;&amp;lt;(B+1)&lt;/li&gt;
+&lt;li&gt;将hash值在原bucket中重新排列，让值排的跟紧凑一些&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;p&gt;map的扩容不是一步完成的，而是的插入值和删除值的时候分步进行的 &lt;code&gt;growWork(t, h, bucket)&lt;/code&gt;&lt;/p&gt;
 
@@ -1307,9 +1957,9 @@ func evacuate(t *maptype, h *hmap, oldbucket uintptr) {
 
 &lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
 
-&lt;p&gt;&lt;a href=&#34;https://blog.yiz96.com/golang-map/&#34;&gt;https://blog.yiz96.com/golang-map/&lt;/a&gt;
-&lt;a href=&#34;https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html&#34;&gt;https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html&lt;/a&gt;
-&lt;a href=&#34;https://github.com/cch123/golang-notes/blob/master/map.md&#34;&gt;https://github.com/cch123/golang-notes/blob/master/map.md&lt;/a&gt;
+&lt;p&gt;&lt;a href=&#34;https://blog.yiz96.com/golang-map/&#34;&gt;https://blog.yiz96.com/golang-map/&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html&#34;&gt;https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://github.com/cch123/golang-notes/blob/master/map.md&#34;&gt;https://github.com/cch123/golang-notes/blob/master/map.md&lt;/a&gt;&lt;br /&gt;
 &lt;a href=&#34;https://www.jianshu.com/p/aa0d4808cbb8&#34;&gt;https://www.jianshu.com/p/aa0d4808cbb8&lt;/a&gt;&lt;/p&gt;
 </description>
       
@@ -4317,7 +4967,7 @@ func recv(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
     <item>
       <title>[转]golang 反射</title>
       <link>https://jayhong.github.io/post/20190306-golang%E5%8F%8D%E5%B0%84/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>https://jayhong.github.io/post/20190306-golang%E5%8F%8D%E5%B0%84/</guid>
       

@@ -29,7 +29,7 @@
 
 
 
-
+<meta name="google-site-verification" content="5ac6dfhvvd2Gk0QXcdoFOhxbMDew_d-vUlJj264vI_c" />
 
 
 <meta name="generator" content="Hugo 0.54.0" />
@@ -70,7 +70,7 @@
 
 <meta itemprop="datePublished" content="2019-03-18T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-03-18T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="4242">
+<meta itemprop="wordCount" content="4244">
 
 
 
@@ -310,7 +310,7 @@ if (!doNotTrack) {
             <a href="https://jayhong.github.io/categories/golang%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"> golang基础知识 </a>
             
           </div>
-        <span class="more-meta"> 约 4242 字 </span>
+        <span class="more-meta"> 约 4244 字 </span>
           <span class="more-meta"> 预计阅读 9 分钟 </span>
 
         
@@ -362,8 +362,8 @@ map 主要需要掌握的就是初始化make、插入、查找、扩容、range�
 <ul>
 <li>1、判断类型的大小与sizeof的大小是否一致（why）</li>
 <li>2、判断key和value的大小以及根据hint确定B的大小<br /></li>
-
-<li><p>3、如果hint是不为0，会分配一个bucket array数组，如果为0，是使用lazyinit的方式在赋值的时候才进行初始化</p>
+<li>3、如果hint是不为0，会分配一个bucket array数组，如果为0，是使用lazyinit的方式在赋值的时候才进行初始化<br /></li>
+</ul>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><span class="lnt"> 1
@@ -462,92 +462,90 @@ map 主要需要掌握的就是初始化make、插入、查找、扩容、range�
 // If h != nil, the map can be created directly in h.
 // If bucket != nil, bucket can be used as the first bucket.
 func makemap(t *maptype, hint int64, h *hmap, bucket unsafe.Pointer) *hmap {
-if sz := unsafe.Sizeof(hmap{}); sz &gt; 48 || sz != t.hmap.size {
-    println(&#34;runtime: sizeof(hmap) =&#34;, sz, &#34;, t.hmap.size =&#34;, t.hmap.size)
-    throw(&#34;bad hmap size&#34;)
-}
-
-if hint &lt; 0 || hint &gt; int64(maxSliceCap(t.bucket.size)) {
-    hint = 0
-}
-
-if !ismapkey(t.key) {
-    throw(&#34;runtime.makemap: unsupported map key type&#34;)
-}
-
-// check compiler&#39;s and reflect&#39;s math
-if t.key.size &gt; maxKeySize &amp;&amp; (!t.indirectkey || t.keysize != uint8(sys.PtrSize)) ||
-    t.key.size &lt;= maxKeySize &amp;&amp; (t.indirectkey || t.keysize != uint8(t.key.size)) {
-    throw(&#34;key size wrong&#34;)
-}
-if t.elem.size &gt; maxValueSize &amp;&amp; (!t.indirectvalue || t.valuesize != uint8(sys.PtrSize)) ||
-    t.elem.size &lt;= maxValueSize &amp;&amp; (t.indirectvalue || t.valuesize != uint8(t.elem.size)) {
-    throw(&#34;value size wrong&#34;)
-}
-
-// invariants we depend on. We should probably check these at compile time
-// somewhere, but for now we&#39;ll do it here.
-if t.key.align &gt; bucketCnt {
-    throw(&#34;key align too big&#34;)
-}
-if t.elem.align &gt; bucketCnt {
-    throw(&#34;value align too big&#34;)
-}
-if t.key.size%uintptr(t.key.align) != 0 {
-    throw(&#34;key size not a multiple of key align&#34;)
-}
-if t.elem.size%uintptr(t.elem.align) != 0 {
-    throw(&#34;value size not a multiple of value align&#34;)
-}
-if bucketCnt &lt; 8 {
-    throw(&#34;bucketsize too small for proper alignment&#34;)
-}
-if dataOffset%uintptr(t.key.align) != 0 {
-    throw(&#34;need padding in bucket (key)&#34;)
-}
-if dataOffset%uintptr(t.elem.align) != 0 {
-    throw(&#34;need padding in bucket (value)&#34;)
-}
-
-// find size parameter which will hold the requested # of elements
-B := uint8(0)
-for ; overLoadFactor(hint, B); B++ {
-}
-
-// allocate initial hash table
-// if B == 0, the buckets field is allocated lazily later (in mapassign)
-// If hint is large zeroing this memory could take a while.
-buckets := bucket
-var extra *mapextra
-if B != 0 {
-    var nextOverflow *bmap
-    buckets, nextOverflow = makeBucketArray(t, B)
-    if nextOverflow != nil {
-        extra = new(mapextra)
-        extra.nextOverflow = nextOverflow
+    if sz := unsafe.Sizeof(hmap{}); sz &gt; 48 || sz != t.hmap.size {
+        println(&#34;runtime: sizeof(hmap) =&#34;, sz, &#34;, t.hmap.size =&#34;, t.hmap.size)
+        throw(&#34;bad hmap size&#34;)
     }
-}
 
-// initialize Hmap
-if h == nil {
-    h = (*hmap)(newobject(t.hmap))
-}
-h.count = 0
-h.B = B
-h.extra = extra
-h.flags = 0
-h.hash0 = fastrand()
-h.buckets = buckets
-h.oldbuckets = nil
-h.nevacuate = 0
-h.noverflow = 0
+    if hint &lt; 0 || hint &gt; int64(maxSliceCap(t.bucket.size)) {
+        hint = 0
+    }
 
-return h
+    if !ismapkey(t.key) {
+        throw(&#34;runtime.makemap: unsupported map key type&#34;)
+    }
+
+    // check compiler&#39;s and reflect&#39;s math
+    if t.key.size &gt; maxKeySize &amp;&amp; (!t.indirectkey || t.keysize != uint8(sys.PtrSize)) ||
+        t.key.size &lt;= maxKeySize &amp;&amp; (t.indirectkey || t.keysize != uint8(t.key.size)) {
+        throw(&#34;key size wrong&#34;)
+    }
+    if t.elem.size &gt; maxValueSize &amp;&amp; (!t.indirectvalue || t.valuesize != uint8(sys.PtrSize)) ||
+        t.elem.size &lt;= maxValueSize &amp;&amp; (t.indirectvalue || t.valuesize != uint8(t.elem.size)) {
+        throw(&#34;value size wrong&#34;)
+    }
+
+    // invariants we depend on. We should probably check these at compile time
+    // somewhere, but for now we&#39;ll do it here.
+    if t.key.align &gt; bucketCnt {
+        throw(&#34;key align too big&#34;)
+    }
+    if t.elem.align &gt; bucketCnt {
+        throw(&#34;value align too big&#34;)
+    }
+    if t.key.size%uintptr(t.key.align) != 0 {
+        throw(&#34;key size not a multiple of key align&#34;)
+    }
+    if t.elem.size%uintptr(t.elem.align) != 0 {
+        throw(&#34;value size not a multiple of value align&#34;)
+    }
+    if bucketCnt &lt; 8 {
+        throw(&#34;bucketsize too small for proper alignment&#34;)
+    }
+    if dataOffset%uintptr(t.key.align) != 0 {
+        throw(&#34;need padding in bucket (key)&#34;)
+    }
+    if dataOffset%uintptr(t.elem.align) != 0 {
+        throw(&#34;need padding in bucket (value)&#34;)
+    }
+
+    // find size parameter which will hold the requested # of elements
+    B := uint8(0)
+    for ; overLoadFactor(hint, B); B++ {
+    }
+
+    // allocate initial hash table
+    // if B == 0, the buckets field is allocated lazily later (in mapassign)
+    // If hint is large zeroing this memory could take a while.
+    buckets := bucket
+    var extra *mapextra
+    if B != 0 {
+        var nextOverflow *bmap
+        buckets, nextOverflow = makeBucketArray(t, B)
+        if nextOverflow != nil {
+            extra = new(mapextra)
+            extra.nextOverflow = nextOverflow
+        }
+    }
+
+    // initialize Hmap
+    if h == nil {
+        h = (*hmap)(newobject(t.hmap))
+    }
+    h.count = 0
+    h.B = B
+    h.extra = extra
+    h.flags = 0
+    h.hash0 = fastrand()
+    h.buckets = buckets
+    h.oldbuckets = nil
+    h.nevacuate = 0
+    h.noverflow = 0
+
+    return h
 }</pre></td></tr></table>
 </div>
-</div></li>
-</ul>
-
+</div>
 <h2 id="元素访问-mapassess">元素访问<code>mapassess</code></h2>
 
 <p>实现上有 mapaccess1，mapaccess2，mapaccessK 几个方法，但几个方法都差不多，只差别在返回内容上。mapaccess1 和 mapaccess2 同时有 32 位、64 位和 string 类型的变种:</p>
@@ -1102,15 +1100,19 @@ done:
 </div>
 <h2 id="扩容操作">扩容操作</h2>
 
-<p>map在数据插入的时候回触发是否扩容，扩容的条件有两个：
-* 判断map的数量 loadFactor * (1&lt;<B), 即元素个数 >= 桶个数 * 6.5
-* overflow 的桶是不是太多了，当 bucket 总数 &lt; 2 ^ 15 时，如果 overflow 的 bucket 总数 &gt;= bucket 的总数，
-那么我们认为 overflow 的桶太多了。当 bucket 总数 &gt;= 2 ^ 15 时，那我们直接和 2 ^ 15 比较，overflow 的
-bucket &gt;= 2 ^ 15 时，即认为溢出桶太多了。</p>
+<p>map在数据插入的时候回触发是否扩容，扩容的条件有两个:</p>
 
-<p>针对上面的两种情况，官方使用两种不同的方式进行扩容的
-* 第一种就是分配新的bucket数组，大小为1&lt;&lt;(B+1)
-* 将hash值在原bucket中重新排列，让值排的跟紧凑一些</p>
+<ul>
+<li>判断map的数量 loadFactor * (1&lt;<B), 即元素个数 >= 桶个数 * 6.5</li>
+<li>overflow 的桶是不是太多了，当 bucket 总数 &lt; 2 ^ 15 时，如果 overflow 的 bucket 总数 &gt;= bucket 的总数，那么我们认为 overflow 的桶太多了。当 bucket 总数 &gt;= 2 ^ 15 时，那我们直接和 2 ^ 15 比较，overflow 的bucket &gt;= 2 ^ 15 时，即认为溢出桶太多了。</li>
+</ul>
+
+<p>针对上面的两种情况，官方使用两种不同的方式进行扩容的:</p>
+
+<ul>
+<li>第一种就是分配新的bucket数组，大小为1&lt;&lt;(B+1)</li>
+<li>将hash值在原bucket中重新排列，让值排的跟紧凑一些</li>
+</ul>
 
 <p>map的扩容不是一步完成的，而是的插入值和删除值的时候分步进行的 <code>growWork(t, h, bucket)</code></p>
 
@@ -1624,9 +1626,9 @@ func evacuate(t *maptype, h *hmap, oldbucket uintptr) {
 
 <h2 id="参考链接">参考链接</h2>
 
-<p><a href="https://blog.yiz96.com/golang-map/">https://blog.yiz96.com/golang-map/</a>
-<a href="https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html">https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html</a>
-<a href="https://github.com/cch123/golang-notes/blob/master/map.md">https://github.com/cch123/golang-notes/blob/master/map.md</a>
+<p><a href="https://blog.yiz96.com/golang-map/">https://blog.yiz96.com/golang-map/</a><br />
+<a href="https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html">https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.3.html</a><br />
+<a href="https://github.com/cch123/golang-notes/blob/master/map.md">https://github.com/cch123/golang-notes/blob/master/map.md</a><br />
 <a href="https://www.jianshu.com/p/aa0d4808cbb8">https://www.jianshu.com/p/aa0d4808cbb8</a></p>
 
     </div>
@@ -1665,6 +1667,19 @@ func evacuate(t *maptype, h *hmap, oldbucket uintptr) {
       
       <nav class="post-nav">
         
+          <a class="prev" href="/post/20190320-golang-slice-%E5%89%96%E6%9E%90/">
+            
+            <i class="iconfont">
+              <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M691.908486 949.511495l75.369571-89.491197c10.963703-12.998035 10.285251-32.864502-1.499144-44.378743L479.499795 515.267417 757.434875 204.940602c11.338233-12.190647 11.035334-32.285311-0.638543-44.850487l-80.46666-86.564541c-11.680017-12.583596-30.356378-12.893658-41.662889-0.716314L257.233596 494.235404c-11.332093 12.183484-11.041474 32.266891 0.657986 44.844348l80.46666 86.564541c1.772366 1.910513 3.706415 3.533476 5.750981 4.877077l306.620399 321.703933C662.505829 963.726242 680.945807 962.528973 691.908486 949.511495z"></path>
+</svg>
+
+            </i>
+            <span class="prev-text nav-default">golang slice 剖析</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
         
           <a class="next" href="/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/">
             <span class="next-text nav-default">golang reflect 剖析</span>

@@ -6,10 +6,20 @@
     <description>Recent content in 实现原理 on jayhong博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 18 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <copyright>jayhong</copyright>
+    <lastBuildDate>Wed, 20 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://jayhong.github.io/tags/%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>golang slice 剖析</title>
+      <link>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</link>
+      <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</guid>
+      <description>slice 介绍 golang中有一种比较特殊的类型slice， slice是可以动态扩容的数组，slice有时候我会错误的把它说成是数组，在golang</description>
+    </item>
     
     <item>
       <title>golang map 剖析</title>
