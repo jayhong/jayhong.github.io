@@ -429,7 +429,27 @@ if (!doNotTrack) {
 
   
 
-  
+  <div class="post bg-white">
+      <div id="comments-gitment"></div>
+      <link rel="stylesheet" href="/lib/gitment/gitment-0.0.3.min.css">
+        <script src="/lib/gitment/gitment-0.0.3.min.js"></script>
+      <script type="text/javascript">
+      const gitment = new Gitment({
+        id: '20190305 为什么开这个博客.md',
+        title: '为什么开这个博客',
+        link: decodeURI(location.href),
+        desc: '从什么时候开始写博客 其实早在我还没有毕业的时候，就已经有写一些博客。当时是写在csdn上面，说起来也是搞笑，因为写的文件里面会带一些引用的链',
+        owner: 'jayhong',
+        repo: 'https:\/\/github.com\/jayhong\/jayhong.github.io',
+        oauth: {
+          client_id: 'b2da1622af25e3076d81',
+          client_secret: '97872a29050f5896d6255b5f2d494528b2a397da'
+        }
+      })
+      gitment.render('comments-gitment')
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+    </div>
 
   
   
