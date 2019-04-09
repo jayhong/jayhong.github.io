@@ -27,6 +27,207 @@
     </item>
     
     <item>
+      <title>golang Assembler学习</title>
+      <link>https://jayhong.github.io/post/golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</link>
+      <pubDate>Thu, 04 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;可以学到什么&#34;&gt;可以学到什么&lt;/h2&gt;
+
+&lt;p&gt;看完这篇文章，可以学到：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;go 汇编的初步认识&lt;/li&gt;
+&lt;li&gt;go 汇编中使用到的伪寄存器&lt;/li&gt;
+&lt;li&gt;如何声明常量、全局变量、函数&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;本文是看完golang官方文档&lt;a href=&#34;https://golang.org/doc/asm&#34;&gt;A Quick Guide to Go&amp;rsquo;s Assembler&lt;/a&gt; 之后写的笔记。大部分是按照原文来翻译的。
+其中有一些概念，在初步看的时候不太懂，后面看了网络上的其他资料之后慢慢捋顺了。学习汇编的原因主要是为了学习golang一些原理性的
+东西，以及学习计算机内存模型。同时看下能否在遇到某些问题的时候能否多一种方式去解决。&lt;/p&gt;
+
+&lt;p&gt;golang使用的汇编语言是基于plan9的，在golang中使用的汇编语言是一种抽象的语言，并不针对某一种特定类型的机器。
+如果想要查看golang汇编在某种平台上生成的抽象代码，可以执行：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;GOOS=linux GOARCH=amd64 go tool compile -S x.go    # or: go build -gcflags -S x.go&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;常量&#34;&gt;常量&lt;/h2&gt;
+
+&lt;p&gt;虽然汇编语言是基于plan 9的，但是有一些不同的地方，常量求值，另外一个常量总是当做是64位无符号整数。&lt;/p&gt;
+
+&lt;h2 id=&#34;符号&#34;&gt;符号&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;伪寄存器 pseudo-registers&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;FP: Frame pointer: arguments and locals.
+PC: Program counter: jumps and branches.
+SB: Static base pointer: global symbols.
+SP: Stack pointer: top of stack.&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;所有用户定义的符号，都被写成&lt;code&gt;pseudo-registers FP&lt;/code&gt;和&lt;code&gt;SB&lt;/code&gt;的偏移&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;pseudo-registers SB&lt;/code&gt;可以当做是内存的起点，所以符号&lt;code&gt;foo(SB)&lt;/code&gt; 是name为foo 在内存中的地址。这种格式主要用于
+全局函数以及数据。在名字之前加上&lt;code&gt;&amp;lt;&amp;gt;&lt;/code&gt;,比如&lt;code&gt;foo&amp;lt;&amp;gt;(SB)&lt;/code&gt;,可以将name的访问范围限制在当前文件中。在名字之前
+加上偏移量可以指向name 偏移相应偏移量之后的内存地址，所以&lt;code&gt;foo+4(SB)&lt;/code&gt; 是在foo 4 Bytes之后的地址。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;pseudo-register FP&lt;/code&gt; 是一个用于引用函数参数的虚拟frame指针，编译器维护了一个虚拟frame指针并且将堆栈上的
+函数参数作为该伪寄存器的偏移量。因此&lt;code&gt;0（FP）&lt;/code&gt;是函数的第一个参数，&lt;code&gt;8（FP）&lt;/code&gt;是第二个（在64位机器上）。但是，
+当以这种方式引用函数参数时，必须在开头放置一个名称，如&lt;code&gt;first_arg + 0（FP）&lt;/code&gt;和&lt;code&gt;second_arg + 8（FP）&lt;/code&gt;。
+（这里与上面的SB 伪寄存器的偏移量不同，&lt;code&gt;foo+4(SB)&lt;/code&gt; 是相对于foo的偏移量，&lt;code&gt;first_arg + 0（FP&lt;/code&gt;的偏移量）
+汇编程序强制执行此约定，拒绝普通&lt;code&gt;0（FP）&lt;/code&gt;和&lt;code&gt;8（FP）&lt;/code&gt;。 实际名称在语义上是不相关的，但应该用于记录参数的名称。 值得强调的是，&lt;code&gt;FP&lt;/code&gt;始终是伪寄存器，而不是硬件寄存器，即使在具有硬件帧指针的架构上也是如此。
+对于Go prototypes的汇编函数，go vet将检查参数名称和偏移量是否匹配。 在32位系统上，通过在名称中添加&lt;code&gt;_lo&lt;/code&gt;
+或&lt;code&gt;_hi&lt;/code&gt;后缀来区分64位值的低32位和高位，如&lt;code&gt;arg_lo + 0（FP）&lt;/code&gt;或&lt;code&gt;arg_hi + 4（FP）&lt;/code&gt;。 如果Go prototypes未命名其结果，
+则返回预期的程序集名称。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;pseudo-register SP&lt;/code&gt;伪寄存器是一个虚拟栈指针，用于引用帧本地变量和为函数调用准备的参数。它指向本地栈帧的顶部，
+因此引用应使用&lt;code&gt;[-framesize，0]&lt;/code&gt;范围内的负偏移：&lt;code&gt;x-8（SP）&lt;/code&gt;，&lt;code&gt;y-4（SP）&lt;/code&gt;，依此类推。&lt;/p&gt;
+
+&lt;p&gt;在具有名为SP的硬件寄存器的体系结构上，名称前缀将对虚拟堆栈指针的引用与对体系结构SP寄存器的引用区分开来。 也就是说，&lt;code&gt;x-8（SP）&lt;/code&gt;和&lt;code&gt;-8（SP）&lt;/code&gt;是不同的存储器位置：第一个是指虚拟堆栈指针伪寄存器，而第二个是指硬件的SP寄存器。&lt;/p&gt;
+
+&lt;p&gt;分支和直接跳转始终写为PC的偏移量，或jump 到标签：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;label:
+    MOVW $0, R1
+    JMP label&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;每个标签仅在定义它的函数内可见。 因此，允许文件中的多个函数定义和使用相同的标签名称。
+Direct jumps and call instructions can target text symbols, such as name(SB), but not offsets from symbols, such as name+4(SB).
+(意思应该是跳转可以跳转到 &lt;code&gt;name(SB)&lt;/code&gt;, 但是无法跳转到&lt;code&gt;name(SB)&lt;/code&gt;的偏移）&lt;/p&gt;
+
+&lt;p&gt;指令，寄存器和汇编程序指令总是大写，以提醒您汇编编程是一项fraught endeavor。&lt;/p&gt;
+
+&lt;p&gt;在Go对象文件和二进制文件中，符号的全名是包路径，后跟句点和符号名称：&lt;code&gt;fmt.Printf&lt;/code&gt;或&lt;code&gt;math / rand.Int&lt;/code&gt;。 因为汇编程序的解析器将句点和斜杠视为标点符号，所以这些字符串不能直接用作标识符名称。
+相反，汇编程序允许在标识符中使用中间点字符&lt;code&gt;U + 00B7&lt;/code&gt;和除法斜杠&lt;code&gt;U + 2215&lt;/code&gt;，并将它们重写为普通句点和斜杠。
+在汇编源文件中，上面的符号写为&lt;code&gt;fmt·Printf&lt;/code&gt;和&lt;code&gt;math / rand·Int&lt;/code&gt;。 编译器在使用-S标志时生成的程序集列表直接显示句点和斜杠，
+而不是汇编程序所需的Unicode替换。&lt;/p&gt;
+
+&lt;p&gt;大多数手写的程序集文件不包含符号名称中的完整程序包路径，因为链接器在以句点开头的任何名称的开头插入当前目标文件的程序包路径：在math / rand中的程序集源文件中 包的实现，包的Int函数可以称为·Int。 此约定避免了在自己的源代码中对包的导入路径进行硬编码的需要，从而可以更轻松地将代码从一个位置移动到另一个位置。&lt;/p&gt;
+
+&lt;h3 id=&#34;指令&#34;&gt;指令&lt;/h3&gt;
+
+&lt;p&gt;汇编程序使用各种指令将文本和数据绑定到符号名称。 例如，这是一个简单的完整函数定义。 TEXT指令声明符号runtime·profileloop以及后面的指令形成函数体。 TEXT块中的最后一条指令必须是某种跳转，通常是RET（伪）指令。 （如果不是，链接器将附加一个跳转到自身的指令; TEXT中没有任何后果。）After the symbol, the arguments are flags (see below) and the frame size, a constant (but see below):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;TEXT runtime·profileloop(SB),NOSPLIT,$8
+    MOVQ    $runtime·profileloop1(SB), CX
+    MOVQ    CX, 0(SP)
+    CALL    runtime·externalthreadhandler(SB)
+    RET&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;在一般情况下，帧大小后跟参数大小，用减号分隔。 （这不是减法，只是特殊语法。）帧大小&lt;code&gt;$ 24-8&lt;/code&gt;表示该函数有一个24字节的帧，并以8字节的参数调用，它们存在于调用者的帧中。 如果没有为&lt;code&gt;TEXT&lt;/code&gt;指定&lt;code&gt;NOSPLIT&lt;/code&gt;，则必须提供参数大小。 对于Go原型的汇编函数，go vet将检查参数大小是否正确。&lt;/p&gt;
+
+&lt;p&gt;请注意，符号名称使用中间点来分隔组件，并为其指定与static base伪寄存器SB的偏移量。 This function would be called from Go source for package runtime using the simple name profileloop.&lt;/p&gt;
+
+&lt;p&gt;全局数据符号由一系列初始化DATA指令定义，后跟GLOBL指令。 每个DATA指令初始化相应内存的一部分。 未明确初始化的内存为零。 DATA指令的一般形式是&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;DATA    symbol+offset(SB)/width, value&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;它使用给定值初始化给定偏移量和宽度的符号内存。 The DATA directives for a given symbol must be written with increasing offsets.（必须使用+偏移量）&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;GLOBL&lt;/code&gt;指令声明符号是全局的。 参数是可选标志，并且数据的大小被声明为全局，除非DATA指令已初始化，否则初始值将全为零。 GLOBL指令必须遵循任何相应的DATA指令。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;7
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;DATA divtab&amp;lt;&amp;gt;+0x00(SB)/4, $0xf4f8fcff
+DATA divtab&amp;lt;&amp;gt;+0x04(SB)/4, $0xe6eaedf0
+...
+DATA divtab&amp;lt;&amp;gt;+0x3c(SB)/4, $0x81828384
+GLOBL divtab&amp;lt;&amp;gt;(SB), RODATA, $64
+
+GLOBL runtime·tlsoffset(SB), NOPTR, $4&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;指令可能有一个或两个参数。 如果有两个，则第一个是标志的位掩码，可以写为数字表达式，添加或者一起编辑，或者可以象征性地设置以便人类更容易吸收。 它们在标准&lt;code&gt;#include&lt;/code&gt;文件&lt;code&gt;textflag.h&lt;/code&gt;中定义的值是：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;NOPROF = 1&lt;br /&gt;
+(For TEXT items.) Don&amp;rsquo;t profile the marked function. This flag is deprecated.不要分析标记的功能。 此标志已被弃用。&lt;/li&gt;
+&lt;li&gt;DUPOK = 2&lt;br /&gt;
+It is legal to have multiple instances of this symbol in a single binary. The linker will choose one of the duplicates to use.在单个二进制文件中包含此符号的多个实例是合法的。 链接器将选择要使用的重复项之一。&lt;/li&gt;
+&lt;li&gt;NOSPLIT = 4&lt;br /&gt;
+(For TEXT items.) Don&amp;rsquo;t insert the preamble to check if the stack must be split. The frame for the routine, plus anything it calls, must fit in the spare space at the top of the stack segment. Used to protect routines such as the stack splitting code itself.（对于TEXT项目）不要插入前导码以检查是否必须拆分堆栈。 例程的框架以及它调用的任何内容必须适合堆栈段顶部的备用空间。 用于保护例如堆栈拆分代码本身的例程。&lt;/li&gt;
+&lt;li&gt;RODATA = 8&lt;br /&gt;
+(For DATA and GLOBL items.) Put this data in a read-only section.将此数据放在只读部分&lt;/li&gt;
+&lt;li&gt;NOPTR = 16&lt;br /&gt;
+(For DATA and GLOBL items.) This data contains no pointers and therefore does not need to be scanned by the garbage collector.此数据不包含指针，因此不需要由垃圾收集器扫描。&lt;/li&gt;
+&lt;li&gt;WRAPPER = 32&lt;br /&gt;
+(For TEXT items.) This is a wrapper function and should not count as disabling recover.这是一个包装函数，不应该算作禁用恢复&lt;/li&gt;
+&lt;li&gt;NEEDCTXT = 64&lt;br /&gt;
+(For TEXT items.) This function is a closure so it uses its incoming context register.此函数是一个闭包，因此它使用其传入的上下文寄存器。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;runtime-coordination&#34;&gt;Runtime Coordination&lt;/h3&gt;
+
+&lt;p&gt;要使垃圾收集正确运行，runtime必须知道所有全局数据和大多数堆栈帧中指针的位置。 Go编译器在编译Go源文件时会发出此信息，但汇编程序必须明确定义它。&lt;/p&gt;
+
+&lt;p&gt;标有NOPTR标志的数据符号（见上文）被视为不包含指向runtime分配数据的指针。 带有RODATA标志的数据符号在read-only memory中分配，因此被视为隐式标记的NOPTR。 总大小小于指针的数据符号也被视为隐式标记的NOPTR。 无法在汇编源文件中定义包含指针的符号; 必须在Go源文件中定义这样的符号。 即使没有DATA和GLOBL指令，汇编源仍然可以按名称引用符号。 一般的经验法则是在Go中定义所有非RODATA符号而不是在程序集中。&lt;/p&gt;
+
+&lt;p&gt;每个函数还需要注释指针的位置，在其参数，结果和本地堆栈框架中给出实时指针的位置。对于没有指针结果且没有本地堆栈帧或没有函数调用的汇编函数，唯一的要求是在同一个包中的Go源文件中为函数定义Go原型。程序集函数的名称不能包含程序包名称组件（例如，程序包syscall中的函数Syscall应使用名称·Syscall而不是其TEXT指令中的等效名称syscall·Syscall）。对于更复杂的情况，需要显式注释。这些注释使用标准&lt;code&gt;#include&lt;/code&gt;文件&lt;code&gt;funcdata.h&lt;/code&gt;中定义的伪指令。&lt;/p&gt;
+
+&lt;p&gt;如果函数没有参数且没有结果，则可以省略指针信息。这由TEXT指令的&lt;code&gt;$ n-0&lt;/code&gt;的参数大小注释表示。否则，指针信息必须由Go源文件中的函数的Go原型提供，即使对于未直接从Go调用的汇编函数也是如此。 （原型也会让vet检查参数引用。）在函数开始时，假定参数被初始化但结果假定未初始化。如果结果将在调用指令期间保存实时指针，则该函数应首先将结果归零，然后执行伪指令&lt;code&gt;GO_RESULTS_INITIALIZED&lt;/code&gt;。此指令记录结果现在已初始化，应在堆栈移动和垃圾回收期间进行扫描。通常更容易安排汇编函数不返回指针或不包含调用指令;标准库中没有汇编函数使用&lt;code&gt;GO_RESULTS_INITIALIZED&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;如果函数没有本地堆栈帧，则可以省略指针信息。这由TEXT指令上的&lt;code&gt;$ 0-n&lt;/code&gt;的本地帧大小注释表示。如果函数不包含调用指令，也可以省略指针信息。否则，本地堆栈帧不能包含指针，并且程序集必须通过执行伪指令&lt;code&gt;NO_LOCAL_POINTERS&lt;/code&gt;来确认此事实。因为通过移动堆栈来实现堆栈大小调整，所以堆栈指针可能在任何函数调用期间发生变化：甚至指向堆栈数据的指针也不能保存在局部变量中。&lt;/p&gt;
+
+&lt;p&gt;程序集函数应始终给予Go原型，既可以为参数和结果提供指针信息，也可以让go vet检查用于访问它们的偏移量是否正确。&lt;/p&gt;
+
+&lt;h3 id=&#34;参考链接&#34;&gt;参考链接&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://golang.org/doc/asm&#34;&gt;https://golang.org/doc/asm&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://github.com/yangyuqian/technical-articles/blob/master/asm/golang-plan9-assembly-cn.md&#34;&gt;https://github.com/yangyuqian/technical-articles/blob/master/asm/golang-plan9-assembly-cn.md&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://lrita.github.io/2017/12/12/golang-asm/&#34;&gt;https://lrita.github.io/2017/12/12/golang-asm/&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;https://blog.csdn.net/bravezhe/article/details/80256035&#34;&gt;https://blog.csdn.net/bravezhe/article/details/80256035&lt;/a&gt;&lt;br /&gt;
+&lt;a href=&#34;http://www.10tiao.com/html/528/201702/2653369847/1.html&#34;&gt;http://www.10tiao.com/html/528/201702/2653369847/1.html&lt;/a&gt;&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
       <title>golang slice 剖析</title>
       <link>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</link>
       <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
