@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>golang Assembler学习 - jayhong博客</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="jayhong" />
+  <meta name="description" content="可以学到什么 看完这篇文章，可以学到： go 汇编的初步认识 go 汇编中使用到的伪寄存器 如何声明常量、全局变量、函数 本文是看完golang官方文档A Quick Guide" />
+
+  <meta name="keywords" content="jayhong, blog, golang" />
+
+
+
+<meta name="google-site-verification" content="5ac6dfhvvd2Gk0QXcdoFOhxbMDew_d-vUlJj264vI_c" />
+
+
+<meta name="generator" content="Hugo 0.54.0" />
+
+
+<link rel="canonical" href="https://jayhong.github.io/post/20190404-golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/" />
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.19ae5a432863a072ec64433bb1020bd6d3401129f87d6f2ad5af3bcfd84168a1.css" integrity="sha256-Ga5aQyhjoHLsZEM7sQIL1tNAESn4fW8q1a87z9hBaKE=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="golang Assembler学习" />
+<meta property="og:description" content="可以学到什么 看完这篇文章，可以学到： go 汇编的初步认识 go 汇编中使用到的伪寄存器 如何声明常量、全局变量、函数 本文是看完golang官方文档A Quick Guide" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jayhong.github.io/post/20190404-golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/" />
+<meta property="article:published_time" content="2019-04-04T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-04-04T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="golang Assembler学习">
+<meta itemprop="description" content="可以学到什么 看完这篇文章，可以学到： go 汇编的初步认识 go 汇编中使用到的伪寄存器 如何声明常量、全局变量、函数 本文是看完golang官方文档A Quick Guide">
+
+
+<meta itemprop="datePublished" content="2019-04-04T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-04-04T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="4231">
+
+
+
+<meta itemprop="keywords" content="golang,blog,汇编,Assembler," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="golang Assembler学习"/>
+<meta name="twitter:description" content="可以学到什么 看完这篇文章，可以学到： go 汇编的初步认识 go 汇编中使用到的伪寄存器 如何声明常量、全局变量、函数 本文是看完golang官方文档A Quick Guide"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-136586689-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">jayhong博客</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      jayhong博客
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">golang Assembler学习</h1>
+      
+      <div class="post-meta">
+        <time datetime="2019-04-04" class="post-time">
+          2019-04-04
+        </time>
+        <div class="post-category">
+            <a href="https://jayhong.github.io/categories/golang/"> golang </a>
+            
+          </div>
+        <span class="more-meta"> 约 4231 字 </span>
+          <span class="more-meta"> 预计阅读 9 分钟 </span>
+
+        
+        
+          <span id="busuanzi_container_page_pv">
+            | 阅读 <span id="busuanzi_value_page_pv"></span>
+          </span>
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#可以学到什么">可以学到什么</a></li>
+<li><a href="#常量">常量</a></li>
+<li><a href="#符号">符号</a>
+<ul>
+<li><a href="#指令">指令</a></li>
+<li><a href="#runtime-coordination">Runtime Coordination</a></li>
+<li><a href="#参考链接">参考链接</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<h2 id="可以学到什么">可以学到什么</h2>
+
+<p>看完这篇文章，可以学到：</p>
+
+<ul>
+<li>go 汇编的初步认识</li>
+<li>go 汇编中使用到的伪寄存器</li>
+<li>如何声明常量、全局变量、函数</li>
+</ul>
+
+<p>本文是看完golang官方文档<a href="https://golang.org/doc/asm">A Quick Guide to Go&rsquo;s Assembler</a> 之后写的笔记。大部分是按照原文来翻译的。
+其中有一些概念，在初步看的时候不太懂，后面看了网络上的其他资料之后慢慢捋顺了。学习汇编的原因主要是为了学习golang一些原理性的
+东西，以及学习计算机内存模型。同时看下能否在遇到某些问题的时候能否多一种方式去解决。</p>
+
+<p>golang使用的汇编语言是基于plan9的，在golang中使用的汇编语言是一种抽象的语言，并不针对某一种特定类型的机器。
+如果想要查看golang汇编在某种平台上生成的抽象代码，可以执行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">GOOS=linux GOARCH=amd64 go tool compile -S x.go    # or: go build -gcflags -S x.go</pre></td></tr></table>
+</div>
+</div>
+<h2 id="常量">常量</h2>
+
+<p>虽然汇编语言是基于plan 9的，但是有一些不同的地方，常量求值，另外一个常量总是当做是64位无符号整数。</p>
+
+<h2 id="符号">符号</h2>
+
+<ul>
+<li>伪寄存器 pseudo-registers</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">FP: Frame pointer: arguments and locals.
+PC: Program counter: jumps and branches.
+SB: Static base pointer: global symbols.
+SP: Stack pointer: top of stack.</pre></td></tr></table>
+</div>
+</div>
+<p>所有用户定义的符号，都被写成<code>pseudo-registers FP</code>和<code>SB</code>的偏移</p>
+
+<p><code>pseudo-registers SB</code>可以当做是内存的起点，所以符号<code>foo(SB)</code> 是name为foo 在内存中的地址。这种格式主要用于
+全局函数以及数据。在名字之前加上<code>&lt;&gt;</code>,比如<code>foo&lt;&gt;(SB)</code>,可以将name的访问范围限制在当前文件中。在名字之前
+加上偏移量可以指向name 偏移相应偏移量之后的内存地址，所以<code>foo+4(SB)</code> 是在foo 4 Bytes之后的地址。</p>
+
+<p><code>pseudo-register FP</code> 是一个用于引用函数参数的虚拟frame指针，编译器维护了一个虚拟frame指针并且将堆栈上的
+函数参数作为该伪寄存器的偏移量。因此<code>0（FP）</code>是函数的第一个参数，<code>8（FP）</code>是第二个（在64位机器上）。但是，
+当以这种方式引用函数参数时，必须在开头放置一个名称，如<code>first_arg + 0（FP）</code>和<code>second_arg + 8（FP）</code>。
+（这里与上面的SB 伪寄存器的偏移量不同，<code>foo+4(SB)</code> 是相对于foo的偏移量，<code>first_arg + 0（FP</code>的偏移量）
+汇编程序强制执行此约定，拒绝普通<code>0（FP）</code>和<code>8（FP）</code>。 实际名称在语义上是不相关的，但应该用于记录参数的名称。 值得强调的是，<code>FP</code>始终是伪寄存器，而不是硬件寄存器，即使在具有硬件帧指针的架构上也是如此。
+对于Go prototypes的汇编函数，go vet将检查参数名称和偏移量是否匹配。 在32位系统上，通过在名称中添加<code>_lo</code>
+或<code>_hi</code>后缀来区分64位值的低32位和高位，如<code>arg_lo + 0（FP）</code>或<code>arg_hi + 4（FP）</code>。 如果Go prototypes未命名其结果，
+则返回预期的程序集名称。</p>
+
+<p><code>pseudo-register SP</code>伪寄存器是一个虚拟栈指针，用于引用帧本地变量和为函数调用准备的参数。它指向本地栈帧的顶部，
+因此引用应使用<code>[-framesize，0]</code>范围内的负偏移：<code>x-8（SP）</code>，<code>y-4（SP）</code>，依此类推。</p>
+
+<p>在具有名为SP的硬件寄存器的体系结构上，名称前缀将对虚拟堆栈指针的引用与对体系结构SP寄存器的引用区分开来。 也就是说，<code>x-8（SP）</code>和<code>-8（SP）</code>是不同的存储器位置：第一个是指虚拟堆栈指针伪寄存器，而第二个是指硬件的SP寄存器。</p>
+
+<p>分支和直接跳转始终写为PC的偏移量，或jump 到标签：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">label:
+    MOVW $0, R1
+    JMP label</pre></td></tr></table>
+</div>
+</div>
+<p>每个标签仅在定义它的函数内可见。 因此，允许文件中的多个函数定义和使用相同的标签名称。
+Direct jumps and call instructions can target text symbols, such as name(SB), but not offsets from symbols, such as name+4(SB).
+(意思应该是跳转可以跳转到 <code>name(SB)</code>, 但是无法跳转到<code>name(SB)</code>的偏移）</p>
+
+<p>指令，寄存器和汇编程序指令总是大写，以提醒您汇编编程是一项fraught endeavor。</p>
+
+<p>在Go对象文件和二进制文件中，符号的全名是包路径，后跟句点和符号名称：<code>fmt.Printf</code>或<code>math / rand.Int</code>。 因为汇编程序的解析器将句点和斜杠视为标点符号，所以这些字符串不能直接用作标识符名称。
+相反，汇编程序允许在标识符中使用中间点字符<code>U + 00B7</code>和除法斜杠<code>U + 2215</code>，并将它们重写为普通句点和斜杠。
+在汇编源文件中，上面的符号写为<code>fmt·Printf</code>和<code>math / rand·Int</code>。 编译器在使用-S标志时生成的程序集列表直接显示句点和斜杠，
+而不是汇编程序所需的Unicode替换。</p>
+
+<p>大多数手写的程序集文件不包含符号名称中的完整程序包路径，因为链接器在以句点开头的任何名称的开头插入当前目标文件的程序包路径：在math / rand中的程序集源文件中 包的实现，包的Int函数可以称为·Int。 此约定避免了在自己的源代码中对包的导入路径进行硬编码的需要，从而可以更轻松地将代码从一个位置移动到另一个位置。</p>
+
+<h3 id="指令">指令</h3>
+
+<p>汇编程序使用各种指令将文本和数据绑定到符号名称。 例如，这是一个简单的完整函数定义。 TEXT指令声明符号runtime·profileloop以及后面的指令形成函数体。 TEXT块中的最后一条指令必须是某种跳转，通常是RET（伪）指令。 （如果不是，链接器将附加一个跳转到自身的指令; TEXT中没有任何后果。）After the symbol, the arguments are flags (see below) and the frame size, a constant (but see below):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">TEXT runtime·profileloop(SB),NOSPLIT,$8
+    MOVQ    $runtime·profileloop1(SB), CX
+    MOVQ    CX, 0(SP)
+    CALL    runtime·externalthreadhandler(SB)
+    RET</pre></td></tr></table>
+</div>
+</div>
+<p>在一般情况下，帧大小后跟参数大小，用减号分隔。 （这不是减法，只是特殊语法。）帧大小<code>$ 24-8</code>表示该函数有一个24字节的帧，并以8字节的参数调用，它们存在于调用者的帧中。 如果没有为<code>TEXT</code>指定<code>NOSPLIT</code>，则必须提供参数大小。 对于Go原型的汇编函数，go vet将检查参数大小是否正确。</p>
+
+<p>请注意，符号名称使用中间点来分隔组件，并为其指定与static base伪寄存器SB的偏移量。 This function would be called from Go source for package runtime using the simple name profileloop.</p>
+
+<p>全局数据符号由一系列初始化DATA指令定义，后跟GLOBL指令。 每个DATA指令初始化相应内存的一部分。 未明确初始化的内存为零。 DATA指令的一般形式是</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">DATA    symbol+offset(SB)/width, value</pre></td></tr></table>
+</div>
+</div>
+<p>它使用给定值初始化给定偏移量和宽度的符号内存。 The DATA directives for a given symbol must be written with increasing offsets.（必须使用+偏移量）</p>
+
+<p><code>GLOBL</code>指令声明符号是全局的。 参数是可选标志，并且数据的大小被声明为全局，除非DATA指令已初始化，否则初始值将全为零。 GLOBL指令必须遵循任何相应的DATA指令。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">DATA divtab&lt;&gt;+0x00(SB)/4, $0xf4f8fcff
+DATA divtab&lt;&gt;+0x04(SB)/4, $0xe6eaedf0
+...
+DATA divtab&lt;&gt;+0x3c(SB)/4, $0x81828384
+GLOBL divtab&lt;&gt;(SB), RODATA, $64
+
+GLOBL runtime·tlsoffset(SB), NOPTR, $4</pre></td></tr></table>
+</div>
+</div>
+<p>指令可能有一个或两个参数。 如果有两个，则第一个是标志的位掩码，可以写为数字表达式，添加或者一起编辑，或者可以象征性地设置以便人类更容易吸收。 它们在标准<code>#include</code>文件<code>textflag.h</code>中定义的值是：</p>
+
+<ul>
+<li>NOPROF = 1<br />
+(For TEXT items.) Don&rsquo;t profile the marked function. This flag is deprecated.不要分析标记的功能。 此标志已被弃用。</li>
+<li>DUPOK = 2<br />
+It is legal to have multiple instances of this symbol in a single binary. The linker will choose one of the duplicates to use.在单个二进制文件中包含此符号的多个实例是合法的。 链接器将选择要使用的重复项之一。</li>
+<li>NOSPLIT = 4<br />
+(For TEXT items.) Don&rsquo;t insert the preamble to check if the stack must be split. The frame for the routine, plus anything it calls, must fit in the spare space at the top of the stack segment. Used to protect routines such as the stack splitting code itself.（对于TEXT项目）不要插入前导码以检查是否必须拆分堆栈。 例程的框架以及它调用的任何内容必须适合堆栈段顶部的备用空间。 用于保护例如堆栈拆分代码本身的例程。</li>
+<li>RODATA = 8<br />
+(For DATA and GLOBL items.) Put this data in a read-only section.将此数据放在只读部分</li>
+<li>NOPTR = 16<br />
+(For DATA and GLOBL items.) This data contains no pointers and therefore does not need to be scanned by the garbage collector.此数据不包含指针，因此不需要由垃圾收集器扫描。</li>
+<li>WRAPPER = 32<br />
+(For TEXT items.) This is a wrapper function and should not count as disabling recover.这是一个包装函数，不应该算作禁用恢复</li>
+<li>NEEDCTXT = 64<br />
+(For TEXT items.) This function is a closure so it uses its incoming context register.此函数是一个闭包，因此它使用其传入的上下文寄存器。</li>
+</ul>
+
+<h3 id="runtime-coordination">Runtime Coordination</h3>
+
+<p>要使垃圾收集正确运行，runtime必须知道所有全局数据和大多数堆栈帧中指针的位置。 Go编译器在编译Go源文件时会发出此信息，但汇编程序必须明确定义它。</p>
+
+<p>标有NOPTR标志的数据符号（见上文）被视为不包含指向runtime分配数据的指针。 带有RODATA标志的数据符号在read-only memory中分配，因此被视为隐式标记的NOPTR。 总大小小于指针的数据符号也被视为隐式标记的NOPTR。 无法在汇编源文件中定义包含指针的符号; 必须在Go源文件中定义这样的符号。 即使没有DATA和GLOBL指令，汇编源仍然可以按名称引用符号。 一般的经验法则是在Go中定义所有非RODATA符号而不是在程序集中。</p>
+
+<p>每个函数还需要注释指针的位置，在其参数，结果和本地堆栈框架中给出实时指针的位置。对于没有指针结果且没有本地堆栈帧或没有函数调用的汇编函数，唯一的要求是在同一个包中的Go源文件中为函数定义Go原型。程序集函数的名称不能包含程序包名称组件（例如，程序包syscall中的函数Syscall应使用名称·Syscall而不是其TEXT指令中的等效名称syscall·Syscall）。对于更复杂的情况，需要显式注释。这些注释使用标准<code>#include</code>文件<code>funcdata.h</code>中定义的伪指令。</p>
+
+<p>如果函数没有参数且没有结果，则可以省略指针信息。这由TEXT指令的<code>$ n-0</code>的参数大小注释表示。否则，指针信息必须由Go源文件中的函数的Go原型提供，即使对于未直接从Go调用的汇编函数也是如此。 （原型也会让vet检查参数引用。）在函数开始时，假定参数被初始化但结果假定未初始化。如果结果将在调用指令期间保存实时指针，则该函数应首先将结果归零，然后执行伪指令<code>GO_RESULTS_INITIALIZED</code>。此指令记录结果现在已初始化，应在堆栈移动和垃圾回收期间进行扫描。通常更容易安排汇编函数不返回指针或不包含调用指令;标准库中没有汇编函数使用<code>GO_RESULTS_INITIALIZED</code>。</p>
+
+<p>如果函数没有本地堆栈帧，则可以省略指针信息。这由TEXT指令上的<code>$ 0-n</code>的本地帧大小注释表示。如果函数不包含调用指令，也可以省略指针信息。否则，本地堆栈帧不能包含指针，并且程序集必须通过执行伪指令<code>NO_LOCAL_POINTERS</code>来确认此事实。因为通过移动堆栈来实现堆栈大小调整，所以堆栈指针可能在任何函数调用期间发生变化：甚至指向堆栈数据的指针也不能保存在局部变量中。</p>
+
+<p>程序集函数应始终给予Go原型，既可以为参数和结果提供指针信息，也可以让go vet检查用于访问它们的偏移量是否正确。</p>
+
+<h3 id="参考链接">参考链接</h3>
+
+<p><a href="https://golang.org/doc/asm">https://golang.org/doc/asm</a><br />
+<a href="https://github.com/yangyuqian/technical-articles/blob/master/asm/golang-plan9-assembly-cn.md">https://github.com/yangyuqian/technical-articles/blob/master/asm/golang-plan9-assembly-cn.md</a><br />
+<a href="https://lrita.github.io/2017/12/12/golang-asm/">https://lrita.github.io/2017/12/12/golang-asm/</a><br />
+<a href="https://blog.csdn.net/bravezhe/article/details/80256035">https://blog.csdn.net/bravezhe/article/details/80256035</a><br />
+<a href="http://www.10tiao.com/html/528/201702/2653369847/1.html">http://www.10tiao.com/html/528/201702/2653369847/1.html</a></p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jayhong</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-04-04</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          <a href="https://jayhong.github.io/tags/golang/">golang</a>
+          <a href="https://jayhong.github.io/tags/blog/">blog</a>
+          <a href="https://jayhong.github.io/tags/%E6%B1%87%E7%BC%96/">汇编</a>
+          <a href="https://jayhong.github.io/tags/assembler/">Assembler</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/20190320-golang-slice-%E5%89%96%E6%9E%90/">
+            <span class="next-text nav-default">golang slice 剖析</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "jayhong/jayhong.github.io"
+            issue-term="pathname"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+  
+
+  
+
+  
+
+  
+  
+    
+
+
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="295157977@qq.com" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="http://github.com/jayhong" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="https://jayhong.github.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    2019
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        jayhong
+        
+      </span></span>
+
+  
+  
+    <span id="busuanzi_container">
+      访客数/访问量：<span id="busuanzi_value_site_uv"></span>/<span id="busuanzi_value_site_pv"></span>
+    </span>
+  
+
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.dee43230127a73d039a734510fa896c89c3c7ce0cf0be0c7a7433f8fd69b76dc.js" integrity="sha256-3uQyMBJ6c9A5pzRRD6iWyJw8fODPC&#43;DHp0M/j9abdtw=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
