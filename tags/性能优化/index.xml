@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>性能优化 on jayhong博客</title>
+    <link>https://jayhong.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/</link>
+    <description>Recent content in 性能优化 on jayhong博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <copyright>jayhong</copyright>
+    <lastBuildDate>Mon, 22 Apr 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://jayhong.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Go pprof 使用</title>
+      <link>https://jayhong.github.io/post/profiling-go-programs/</link>
+      <pubDate>Mon, 22 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/profiling-go-programs/</guid>
+      <description>go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof</description>
+    </item>
+    
+  </channel>
+</rss>
