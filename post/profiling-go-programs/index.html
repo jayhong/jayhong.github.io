@@ -70,7 +70,7 @@
 
 <meta itemprop="datePublished" content="2019-04-22T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-04-22T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="3110">
+<meta itemprop="wordCount" content="3078">
 
 
 
@@ -310,7 +310,7 @@ if (!doNotTrack) {
             <a href="https://jayhong.github.io/categories/golang/"> golang </a>
             
           </div>
-        <span class="more-meta"> 约 3110 字 </span>
+        <span class="more-meta"> 约 3078 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -360,7 +360,7 @@ if (!doNotTrack) {
 <h2 id="go-pprof-性能优化">go pprof 性能优化</h2>
 
 <p><code>pprof</code> 是<code>golang</code>官方提供的一种工具，主要就是用于go程序的性能优化。<code>pprof</code>的原理就是通过在<code>golang</code>程序中采样
-生产<code>profile</code>文件，然后使用<code>go tool pprof</code>工具进行分析。对于<code>web server</code>类，<code>pprof</code>提供了<code>web</code>的方式来分析性能。</p>
+生产<code>profile</code>文件，然后使用<code>go tool pprof</code>工具进行分析。对于<code>web server</code>类，<code>pprof</code>提供了网页的方式来分析性能。</p>
 
 <h2 id="prof-文件的类型"><code>.prof</code>文件的类型</h2>
 
@@ -684,7 +684,7 @@ Showing top 10 nodes out of 123
 以表格的形式展示函数</p></li>
 
 <li><p>web  正则表达式<br />
-在浏览器上显示分配的情况或者耗时情况。</p></li>
+使用web命令，需要安装 <a href="http://www.graphviz.org/download/">graphviz</a> 在浏览器上显示分配的情况或者耗时情况。</p></li>
 
 <li><p>weblist 正则表达式<br />
 将list命令输出的内容在浏览器上显示出来，点击底色为黑色的代码可以显示相关的汇编</p></li>
@@ -724,7 +724,7 @@ Showing top 10 nodes out of 123
 
 <h2 id="火焰图">火焰图</h2>
 
-<p>火焰图（Flame Graph）是 Bredan Gregg 创建的一种性能分析图表，因为它的样子近似 🔥而得名。上面的 profiling 结果也转换成火焰图，如果对火焰图比较了解可以手动来操作，不过这里我们要介绍一个工具：(go-torch)[<a href="https://github.com/uber-archive/go-torch]。这是">https://github.com/uber-archive/go-torch]。这是</a> uber 开源的一个工具，可以直接读取 golang profiling 数据，并生成一个火焰图的 svg 文件。火焰图 svg 文件可以通过浏览器打开，它对于调用图的最优点是它是动态的：可以通过点击每个方块来 zoom in 分析它上面的内容。</p>
+<p>火焰图（Flame Graph）是 Bredan Gregg 创建的一种性能分析图表，因为它的样子近似 🔥而得名。上面的 profiling 结果也转换成火焰图，如果对火焰图比较了解可以手动来操作，不过这里我们要介绍一个工具：<a href="https://github.com/uber-archive/go-torch">go-torch</a>。这是 uber 开源的一个工具，可以直接读取 golang profiling 数据，并生成一个火焰图的 svg 文件。火焰图 svg 文件可以通过浏览器打开，它对于调用图的最优点是它是动态的：可以通过点击每个方块来 zoom in 分析它上面的内容。</p>
 
 <p>火焰图的调用顺序从下到上（在go pprof tool中是从上到下），每个方块代表一个函数，它上面一层表示这个函数会调用哪些函数，方块的大小代表了占用 CPU 使用的长短。火焰图的配色并没有特殊的意义，默认的红、黄配色是为了更像火焰而已。所以主要关注长的</p>
 
