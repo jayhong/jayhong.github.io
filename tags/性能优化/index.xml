@@ -14,10 +14,10 @@
     
     <item>
       <title>Go pprof 使用</title>
-      <link>https://jayhong.github.io/post/profiling-go-programs/</link>
+      <link>https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Mon, 22 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/profiling-go-programs/</guid>
+      <guid>https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/</guid>
       <description>go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof</description>
     </item>
     

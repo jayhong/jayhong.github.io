@@ -14,83 +14,92 @@
     
     <item>
       <title>Go pprof 使用</title>
-      <link>https://jayhong.github.io/post/profiling-go-programs/</link>
+      <link>https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Mon, 22 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/profiling-go-programs/</guid>
+      <guid>https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/</guid>
       <description>go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof</description>
     </item>
     
     <item>
+      <title>golang 逃逸分析</title>
+      <link>https://jayhong.github.io/post/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</link>
+      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</guid>
+      <description>什么是逃逸分析？ 可以参考wikipedia 上面的介绍。 在编译程序优化理论中，逃逸分析是一种确定指针动态范围的方法——分析在程序的哪些地方可以</description>
+    </item>
+    
+    <item>
       <title>golang Assembler学习</title>
-      <link>https://jayhong.github.io/post/20190404-golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</link>
+      <link>https://jayhong.github.io/post/golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</link>
       <pubDate>Thu, 04 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190404-golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</guid>
+      <guid>https://jayhong.github.io/post/golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</guid>
       <description>可以学到什么 看完这篇文章，可以学到： go 汇编的初步认识 go 汇编中使用到的伪寄存器 如何声明常量、全局变量、函数 本文是看完golang官方文档A Quick Guide</description>
     </item>
     
     <item>
       <title>golang slice 剖析</title>
-      <link>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-slice-%E5%89%96%E6%9E%90/</link>
       <pubDate>Wed, 20 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190320-golang-slice-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-slice-%E5%89%96%E6%9E%90/</guid>
       <description>slice 介绍 golang中有一种比较特殊的类型slice， slice是可以动态扩容的数组，slice有时候我会错误的把它说成是数组，在golang</description>
     </item>
     
     <item>
       <title>golang map 剖析</title>
-      <link>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-map-%E5%89%96%E6%9E%90/</link>
       <pubDate>Mon, 18 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-map-%E5%89%96%E6%9E%90/</guid>
       <description>前言 map在工作中用的还是很多的，可以通过学习map的源码实现来避免很多的坑。以及实现原理。 map 主要需要掌握的就是初始化make、插入、查找、</description>
     </item>
     
     <item>
       <title>golang reflect 剖析</title>
-      <link>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-reflect-%E5%89%96%E6%9E%90/</link>
       <pubDate>Thu, 14 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-reflect-%E5%89%96%E6%9E%90/</guid>
       <description>之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的 反射代码剖析 需要先了解一下golang中的类型系统以及</description>
     </item>
     
     <item>
       <title>golang interface 剖析</title>
-      <link>https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-interface-%E5%89%96%E6%9E%90/</link>
       <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-interface-%E5%89%96%E6%9E%90/</guid>
       <description>interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了</description>
     </item>
     
     <item>
       <title>golang channel实现原理</title>
-      <link>https://jayhong.github.io/post/20190307-golang-channel-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-channel-%E5%89%96%E6%9E%90/</link>
       <pubDate>Thu, 07 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190307-golang-channel-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-channel-%E5%89%96%E6%9E%90/</guid>
       <description>channel 要想理解 channel 要先知道 CSP 模型。CSP 是 Communicating Sequential Process 的简称，中文可以叫做通信顺序进程，是一种并发编程模型，由 Tony Hoare 于 1977 年提出。简单来说，CSP 模型由并发</description>
     </item>
     
     <item>
       <title>[转]golang 反射</title>
-      <link>https://jayhong.github.io/post/20190306-golang%E5%8F%8D%E5%B0%84/</link>
+      <link>https://jayhong.github.io/post/golang-%E5%8F%8D%E5%B0%84/</link>
       <pubDate>Wed, 06 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190306-golang%E5%8F%8D%E5%B0%84/</guid>
+      <guid>https://jayhong.github.io/post/golang-%E5%8F%8D%E5%B0%84/</guid>
       <description>转自 https://juejin.im/post/5a75a4fb5188257a82110544#heading-2 什么是反射 反射在计算机领域是一种能够通过类型来检查自己的值的能力，在golang中反射提供了一种机制在运行时更新变量和检查它们的值、调</description>
     </item>
     
     <item>
-      <title>为什么开这个博客</title>
-      <link>https://jayhong.github.io/post/20190305-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%80%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/</link>
+      <title>我为什么写博客</title>
+      <link>https://jayhong.github.io/post/%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%80%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190305-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%80%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/</guid>
-      <description>从什么时候开始写博客 其实早在我还没有毕业的时候，就已经有写一些博客。当时是写在csdn上面，说起来也是搞笑，因为写的文件里面会带一些引用的链</description>
+      <guid>https://jayhong.github.io/post/%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BC%80%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/</guid>
+      <description>我为什么要写博客？ 毕业接近3年了，其实早在我还没有毕业的时候，就已经有写一些博客。当然当时是为了应付找工作，所以毕业之后就荒废了。当时是写在</description>
     </item>
     
   </channel>

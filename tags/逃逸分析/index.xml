@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>逃逸分析 on jayhong博客</title>
+    <link>https://jayhong.github.io/tags/%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</link>
+    <description>Recent content in 逃逸分析 on jayhong博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <copyright>jayhong</copyright>
+    <lastBuildDate>Wed, 17 Apr 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://jayhong.github.io/tags/%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>golang 逃逸分析</title>
+      <link>https://jayhong.github.io/post/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</link>
+      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</guid>
+      <description>什么是逃逸分析？ 可以参考wikipedia 上面的介绍。 在编译程序优化理论中，逃逸分析是一种确定指针动态范围的方法——分析在程序的哪些地方可以</description>
+    </item>
+    
+  </channel>
+</rss>

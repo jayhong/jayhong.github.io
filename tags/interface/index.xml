@@ -14,28 +14,28 @@
     
     <item>
       <title>golang map 剖析</title>
-      <link>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-map-%E5%89%96%E6%9E%90/</link>
       <pubDate>Mon, 18 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190319-golang-map-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-map-%E5%89%96%E6%9E%90/</guid>
       <description>前言 map在工作中用的还是很多的，可以通过学习map的源码实现来避免很多的坑。以及实现原理。 map 主要需要掌握的就是初始化make、插入、查找、</description>
     </item>
     
     <item>
       <title>golang reflect 剖析</title>
-      <link>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-reflect-%E5%89%96%E6%9E%90/</link>
       <pubDate>Thu, 14 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190313-golang-reflect-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-reflect-%E5%89%96%E6%9E%90/</guid>
       <description>之前已经有一篇文章写放射的用法，今天主要是从源码的角度来分析反射，看下放射是如何实现的 反射代码剖析 需要先了解一下golang中的类型系统以及</description>
     </item>
     
     <item>
       <title>golang interface 剖析</title>
-      <link>https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/</link>
+      <link>https://jayhong.github.io/post/golang-interface-%E5%89%96%E6%9E%90/</link>
       <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190311-golang-interface-%E5%89%96%E6%9E%90/</guid>
+      <guid>https://jayhong.github.io/post/golang-interface-%E5%89%96%E6%9E%90/</guid>
       <description>interface 是什么？ interface 是一种具有一组方法的类型，这些方法定义了 interface 的行为。 go 允许不带任何方法的 interface ，这种类型的 interface 叫 empty interface。 如果一个类型实现了</description>
     </item>
     

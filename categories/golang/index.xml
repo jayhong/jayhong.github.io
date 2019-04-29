@@ -14,19 +14,28 @@
     
     <item>
       <title>Go pprof 使用</title>
-      <link>https://jayhong.github.io/post/profiling-go-programs/</link>
+      <link>https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Mon, 22 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/profiling-go-programs/</guid>
+      <guid>https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/</guid>
       <description>go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof</description>
     </item>
     
     <item>
+      <title>golang 逃逸分析</title>
+      <link>https://jayhong.github.io/post/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</link>
+      <pubDate>Wed, 17 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://jayhong.github.io/post/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</guid>
+      <description>什么是逃逸分析？ 可以参考wikipedia 上面的介绍。 在编译程序优化理论中，逃逸分析是一种确定指针动态范围的方法——分析在程序的哪些地方可以</description>
+    </item>
+    
+    <item>
       <title>golang Assembler学习</title>
-      <link>https://jayhong.github.io/post/20190404-golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</link>
+      <link>https://jayhong.github.io/post/golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</link>
       <pubDate>Thu, 04 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://jayhong.github.io/post/20190404-golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</guid>
+      <guid>https://jayhong.github.io/post/golang-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80/</guid>
       <description>可以学到什么 看完这篇文章，可以学到： go 汇编的初步认识 go 汇编中使用到的伪寄存器 如何声明常量、全局变量、函数 本文是看完golang官方文档A Quick Guide</description>
     </item>
     

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Go pprof 使用 - jayhong博客</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="jayhong" />
+  <meta name="description" content="go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof" />
+
+  <meta name="keywords" content="jayhong, blog, golang" />
+
+
+
+<meta name="google-site-verification" content="5ac6dfhvvd2Gk0QXcdoFOhxbMDew_d-vUlJj264vI_c" />
+
+
+<meta name="generator" content="Hugo 0.54.0" />
+
+
+<link rel="canonical" href="https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/" />
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.19ae5a432863a072ec64433bb1020bd6d3401129f87d6f2ad5af3bcfd84168a1.css" integrity="sha256-Ga5aQyhjoHLsZEM7sQIL1tNAESn4fW8q1a87z9hBaKE=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="Go pprof 使用" />
+<meta property="og:description" content="go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jayhong.github.io/post/golang-pprof-%E4%BD%BF%E7%94%A8/" />
+<meta property="article:published_time" content="2019-04-22T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-04-22T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="Go pprof 使用">
+<meta itemprop="description" content="go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof">
+
+
+<meta itemprop="datePublished" content="2019-04-22T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-04-22T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="3078">
+
+
+
+<meta itemprop="keywords" content="golang,blog,pprof,性能优化," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Go pprof 使用"/>
+<meta name="twitter:description" content="go pprof 性能优化 pprof 是golang官方提供的一种工具，主要就是用于go程序的性能优化。pprof的原理就是通过在golang程序中采样 生产prof"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-136586689-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">jayhong博客</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      jayhong博客
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/">首页</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/post/">归档</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/tags/">标签</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/categories/">分类</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://jayhong.github.io/about/">关于</a>
+          
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">Go pprof 使用</h1>
+      
+      <div class="post-meta">
+        <time datetime="2019-04-22" class="post-time">
+          2019-04-22
+        </time>
+        <div class="post-category">
+            <a href="https://jayhong.github.io/categories/golang/"> golang </a>
+            
+          </div>
+        <span class="more-meta"> 约 3078 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
+
+        
+        
+          <span id="busuanzi_container_page_pv">
+            | 阅读 <span id="busuanzi_value_page_pv"></span>
+          </span>
+        
+
+        
+        
+      </div>
+    </header>
+    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5cb7ff5ace4c5b59"></script>
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#go-pprof-性能优化">go pprof 性能优化</a></li>
+<li><a href="#prof-文件的类型"><code>.prof</code>文件的类型</a></li>
+<li><a href="#在程序中使用-pprof">在程序中使用<code>pprof</code></a>
+<ul>
+<li><a href="#runtime-pprof"><code>runtime/pprof</code></a></li>
+<li><a href="#net-http-pprof"><code>net/http/pprof</code></a></li>
+<li><a href="#benchtest生成pprof">benchtest生成pprof</a></li>
+</ul></li>
+<li><a href="#go-tool-pprof-的使用"><code>go tool pprof</code> 的使用</a></li>
+<li><a href="#go-tool-trace-的使用"><code>go tool trace</code> 的使用</a></li>
+<li><a href="#火焰图">火焰图</a></li>
+<li><a href="#优化建议">优化建议</a></li>
+<li><a href="#参考链接">参考链接</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<h2 id="go-pprof-性能优化">go pprof 性能优化</h2>
+
+<p><code>pprof</code> 是<code>golang</code>官方提供的一种工具，主要就是用于go程序的性能优化。<code>pprof</code>的原理就是通过在<code>golang</code>程序中采样
+生产<code>profile</code>文件，然后使用<code>go tool pprof</code>工具进行分析。对于<code>web server</code>类，<code>pprof</code>提供了网页的方式来分析性能。</p>
+
+<h2 id="prof-文件的类型"><code>.prof</code>文件的类型</h2>
+
+<p><code>profile</code>文件有以下几种类型:</p>
+
+<ul>
+<li><p>CPU Profiling<br />
+在默认的情况下，按照100hz的频率去采集应用程序在 CPU 和寄存器上面的数据，对当前的Goroutine的堆栈上的程序计数器的取样。所以出现的采样次数越多则说明代码的运行时间越长
+由此，我们就可以从样本记录中分析出哪些代码是计算时间最长或者说最耗CPU资源的部分了。</p></li>
+
+<li><p>Memory Profiling<br />
+内存分析，在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。</p></li>
+
+<li><p>Block Profiling<br />
+阻塞分析，记录 goroutine 阻塞等待同步（包括定时器通道）的位置</p></li>
+
+<li><p>Mutex Profiling<br />
+互斥锁分析，报告互斥锁的竞争情况</p></li>
+
+<li><p>goroutine<br />
+所有当前正则运行的goroutine的调用栈</p></li>
+
+<li><p>threadcreate<br />
+获取导致创建 OS 线程的 goroutine 堆栈</p></li>
+
+<li><p>allocs<br />
+过去所有内存分配的采样</p></li>
+
+<li><p>trace<br />
+获取当前的执行任务，可以通过go tool trace可以</p></li>
+</ul>
+
+<h2 id="在程序中使用-pprof">在程序中使用<code>pprof</code></h2>
+
+<h3 id="runtime-pprof"><code>runtime/pprof</code></h3>
+
+<p>非server类的程序可以使用<code>runtime/pprof</code> 进行采样。</p>
+
+<ul>
+<li>cpu profile<br /></li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">var cpuprofile = flag.String(&#34;cpuprofile&#34;, &#34;&#34;, &#34;write cpu profile to file&#34;)
+
+func main() {
+    flag.Parse()
+    if *cpuprofile != &#34;&#34; {
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal(err)
+        }
+        pprof.StartCPUProfile(f)
+        defer pprof.StopCPUProfile()
+    }
+    ...</pre></td></tr></table>
+</div>
+</div>
+<p><code>pprof.StartCPUProfile(f)</code>开启cpu采样，pprof默认会100hz采样一次，然后将cpu采样信息写入到文件中。
+<code>pprof.StopCPUProfile()</code> 通过将采样频率设置为0，来控制停止采样</p>
+
+<p>生成的profile可以通过<code>go tool pprof</code>来进行分析</p>
+
+<ul>
+<li>heap profile<br /></li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">var memprofile = flag.String(&#34;memprofile&#34;, &#34;&#34;, &#34;write memory profile to this file&#34;)
+...
+
+    FindHavlakLoops(cfgraph, lsgraph)
+    if *memprofile != &#34;&#34; {
+        f, err := os.Create(*memprofile)
+        if err != nil {
+            log.Fatal(err)
+        }
+        pprof.WriteHeapProfile(f)
+        f.Close()
+        return
+    }</pre></td></tr></table>
+</div>
+</div>
+<p>heap profile只需要调用<code>pprof.WriteHeapProfile(file)</code>即可完成采样。说明对于堆分配的采样在golang中是
+默认进行的。判断是否采样是通过<code>runtime.MemProfileRate</code>来控制，默认值为 <code>512K</code>, 当golang分配的内存超过
+512k时就会进行采样。</p>
+
+<ul>
+<li>其它pprof文件的生成</li>
+</ul>
+
+<p>其他的pprof文件的生成可以通过使用<code>pprof.Lookup</code>函数, <code>pprof.Lookup</code>支持下列类型:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">profiles.m = map[string]*Profile{
+            &#34;goroutine&#34;:    goroutineProfile,
+            &#34;threadcreate&#34;: threadcreateProfile,
+            &#34;heap&#34;:         heapProfile,
+            &#34;allocs&#34;:       allocsProfile,
+            &#34;block&#34;:        blockProfile,
+            &#34;mutex&#34;:        mutexProfile,
+        }</pre></td></tr></table>
+</div>
+</div>
+<p><code>pprof.Lookup</code>需要配合<code>WirteTo</code>一起使用, 下面是一个例子</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func stopBlockProfile() {
+    if *blockProfile != &#34;&#34; {
+        f, err := os.Create(*blockProfile)
+        if err != nil {
+            fmt.Fprintf(os.Stderr, &#34;Can not create block profile output file: %s&#34;, err)
+            return
+        }
+        if err = pprof.Lookup(&#34;block&#34;).WriteTo(f, 0); err != nil {
+            fmt.Fprintf(os.Stderr, &#34;Can not write %s: %s&#34;, *blockProfile, err)
+        }
+        f.Close()
+    }
+}</pre></td></tr></table>
+</div>
+</div>
+<p><code>WriteTo</code>支持两个参数，第一个是文件描述符<code>f</code>, 第二个参数是<code>debug</code>, <code>debug</code>的取值范围为0、1、大于等于2。当<code>debug</code>的值小于等于<code>0</code>时，运行时
+系统仅会将每个记录项中的基本信息写入到概要文件中。记录项的基本信息只包括其调用栈中各项的以十六
+进制表示的内存地址。<code>debug</code>的值越大，我们能从概要文件中获取的信息越多。</p>
+
+<h3 id="net-http-pprof"><code>net/http/pprof</code></h3>
+
+<p>对于server类的程序，可以使用<code>net/http/pprof</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">&#34;net/http&#34;</span>
+    <span class="nx">_</span> <span class="s">&#34;net/http/pprof&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="o">...</span><span class="p">..</span>
+
+    <span class="nx">http</span><span class="p">.</span><span class="nf">ListenAndServe</span><span class="p">(</span><span class="s">&#34;0.0.0.0:7200&#34;</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+<span class="p">}</span></pre></td></tr></table>
+</div>
+</div>
+<p>使用起来是比较简单的。然后就可以通过在浏览器中访问<code>http://localhost:7200/debug/pprof/</code>可以看到可以采集的profile类型。
+随着版本的不断更新页面上的内容也不断丰富。在go 1.12 中会将可以采集的信息，以及注释都在页面中体现出来。点击相关的
+profile type，可以跳转到相关的信息。其中比如goroutine可以设置debug，这个debug跟上面介绍到的<code>WriteTo</code>函数中的<code>debug</code>
+一样。</p>
+
+<blockquote>
+<p>pprof 是什么时候进行采样的？类型阻塞以及内存分配的profiel是默认开启的，可以通过设置runtime中的采样频率来关闭。
+对cpu的采集并不是一直进行的，可以参考链接<code>https://studygolang.com/articles/11873</code></p>
+</blockquote>
+
+<h3 id="benchtest生成pprof">benchtest生成pprof</h3>
+
+<p>可以使用命令<code>go test -bench=BenchmarkStorageXXX -cpuprofile cpu.out -memprofile mem.out</code></p>
+
+<h2 id="go-tool-pprof-的使用"><code>go tool pprof</code> 的使用</h2>
+
+<p>生成的profile 和 heap profile 可以通过go tool pprof进行分析。</p>
+
+<p>详细的使用方式可以通过执行 <code>go tool pprof -h</code></p>
+
+<p>go tool pprof 最简单的使用方式为 <code>pprof &lt;format&gt; [options] [binary] &lt;source&gt;</code>，binary 是应用的二进制文件，用来解析各种符号；source 表示 profile 数据的来源，可以是本地的文件，也可以是 http 地址。比如：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">go tool pprof binary http://localhost:7200/debug/pprof/profile?seconds=10</pre></td></tr></table>
+</div>
+</div>
+<p>进入到命令行交互提示如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">Fetching profile over HTTP from http://localhost:7200/debug/pprof/profile?seconds=10
+Saved profile in /Users/eddycjy/pprof/pprof.samples.cpu.007.pb.gz
+Type: cpu
+Duration: 1mins, Total samples = 26.55s (44.15%)
+Entering interactive mode (type &#34;help&#34; for commands, &#34;o&#34; for options)
+(pprof) </pre></td></tr></table>
+</div>
+</div>
+<p>下面介绍几个最常用的子命令：</p>
+
+<ul>
+<li>top</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">(pprof) top10
+Showing nodes accounting for 1040ms, 48.37% of 2150ms total
+Dropped 76 nodes (cum &lt;= 10.75ms)
+Showing top 10 nodes out of 123
+      flat  flat%   sum%        cum   cum%
+     190ms  8.84%  8.84%      740ms 34.42%  runtime.mallocgc
+     190ms  8.84% 17.67%      190ms  8.84%  runtime.memclrNoHeapPointers
+     140ms  6.51% 24.19%      160ms  7.44%  runtime.heapBitsSetType
+      90ms  4.19% 28.37%      330ms 15.35%  regexp.makeOnePass.func1
+      80ms  3.72% 32.09%      190ms  8.84%  regexp.onePassCopy
+      80ms  3.72% 35.81%      110ms  5.12%  runtime.scanobject
+      70ms  3.26% 39.07%      100ms  4.65%  regexp.(*Regexp).doOnePass
+      70ms  3.26% 42.33%       70ms  3.26%  regexp.cleanupOnePass
+      70ms  3.26% 45.58%      390ms 18.14%  runtime.growslice
+      60ms  2.79% 48.37%       70ms  3.26%  net/url.unescape</pre></td></tr></table>
+</div>
+</div>
+<p>top 命令各列的含义：
+    * flat：给定函数上运行耗时
+    * flat%：同上的 CPU 运行耗时总比例
+    * sum%：给定函数累积使用 CPU 总比例
+    * cum：当前函数加上它之上的调用运行总耗时
+    * cum%：同上的 CPU 运行耗时总比例</p>
+
+<ul>
+<li><p>top -cum<br />
+按照cum列进行排序，不是100%是因为有截断</p></li>
+
+<li><p>list 正则表达式<br />
+查看正则表达式匹配到的函数每一行代码的运行情况</p></li>
+
+<li><p>peek 正则表达式<br />
+以表格的形式展示函数</p></li>
+
+<li><p>web  正则表达式<br />
+使用web命令，需要安装 <a href="http://www.graphviz.org/download/">graphviz</a> 在浏览器上显示分配的情况或者耗时情况。</p></li>
+
+<li><p>weblist 正则表达式<br />
+将list命令输出的内容在浏览器上显示出来，点击底色为黑色的代码可以显示相关的汇编</p></li>
+
+<li><p>go tool pprof 在分析heap profile的时候支持一些option</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">-inuse_space           使用内存的大小
+-inuse_objects         使用堆对象的个数
+-alloc_space           分配的堆内存大小
+-alloc_objects         分配的堆对象个数
+--nodefraction=0.1     过滤掉噪音，小对象不列出</pre></td></tr></table>
+</div>
+</div></li>
+
+<li><p>特别推荐 <code>go tool -http=:8080 profile</code>
+使用这个命令可以在web端显示profile的内容，更加直观易用。还可以查看火焰图</p></li>
+</ul>
+
+<blockquote>
+<p>使用<code>go tool pprof</code>分析程序性能的具体例子可以参考链接 <code>http://xargin.com/pprof-and-flamegraph/</code></p>
+</blockquote>
+
+<h2 id="go-tool-trace-的使用"><code>go tool trace</code> 的使用</h2>
+
+<p>可以参考小米运维的文章
+<a href="https://mp.weixin.qq.com/s/I9xSMxy32cALSNQAN8wlnQ">https://mp.weixin.qq.com/s/I9xSMxy32cALSNQAN8wlnQ</a><br />
+是对以下链接的翻译<br />
+<a href="https://blog.gopheracademy.com/advent-2017/go-execution-tracer/">https://blog.gopheracademy.com/advent-2017/go-execution-tracer/</a></p>
+
+<h2 id="火焰图">火焰图</h2>
+
+<p>火焰图（Flame Graph）是 Bredan Gregg 创建的一种性能分析图表，因为它的样子近似 🔥而得名。上面的 profiling 结果也转换成火焰图，如果对火焰图比较了解可以手动来操作，不过这里我们要介绍一个工具：<a href="https://github.com/uber-archive/go-torch">go-torch</a>。这是 uber 开源的一个工具，可以直接读取 golang profiling 数据，并生成一个火焰图的 svg 文件。火焰图 svg 文件可以通过浏览器打开，它对于调用图的最优点是它是动态的：可以通过点击每个方块来 zoom in 分析它上面的内容。</p>
+
+<p>火焰图的调用顺序从下到上（在go pprof tool中是从上到下），每个方块代表一个函数，它上面一层表示这个函数会调用哪些函数，方块的大小代表了占用 CPU 使用的长短。火焰图的配色并没有特殊的意义，默认的红、黄配色是为了更像火焰而已。所以主要关注长的</p>
+
+<p>go-torch 工具的使用非常简单，没有任何参数的话，它会尝试从 <a href="http://localhost:8080/debug/pprof/profile">http://localhost:8080/debug/pprof/profile</a> 获取 profiling 数据。它有三个常用的参数可以调整：</p>
+
+<ul>
+<li>-u &ndash;url：要访问的 URL，这里只是主机和端口部分<br /></li>
+<li>-s &ndash;suffix：pprof profile 的路径，默认为 /debug/pprof/profile<br /></li>
+<li>&ndash;seconds：要执行 profiling 的时间长度，默认为 30s<br /></li>
+</ul>
+
+<p>go-torch 在go 1.11 之后已经集成到go tool pprof中, 通过<code>go tool -http=:8080 profile</code> 可以查看.</p>
+
+<p>如果使用go 1.11 之前的版本，使用以下命令</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"># Get the pprof tool directly
+$ go get -u github.com/google/pprof
+
+$ pprof -http=&#34;:8081&#34; [binary] [profile]</pre></td></tr></table>
+</div>
+</div>
+<h2 id="优化建议">优化建议</h2>
+
+<ul>
+<li>不要过早优化。</li>
+<li>了解golang逃逸分析，减少堆分配</li>
+<li>对频繁分配的小对象，使用 sync.Pool 对象池避免分配</li>
+<li>用 atomic.Load/StoreXXX，atomic.Value, sync.Map 等代替 Mutex。(优先级递减)</li>
+<li>使用高效的第三方库，如用fasthttp替代 net/http</li>
+<li>在开发环境加上-race编译选项进行竞态检查</li>
+<li>在开发环境开启 net/http/pprof，方便实时 pprof</li>
+</ul>
+
+<h2 id="参考链接">参考链接</h2>
+
+<p><a href="https://blog.golang.org/profiling-go-programs">https://blog.golang.org/profiling-go-programs</a><br />
+<a href="https://studygolang.com/articles/11873">https://studygolang.com/articles/11873</a>
+<a href="http://xargin.com/pprof-and-flamegraph/">http://xargin.com/pprof-and-flamegraph/</a>
+<a href="https://www.jianshu.com/p/162f44022eb7">https://www.jianshu.com/p/162f44022eb7</a><br />
+<a href="https://www.cnblogs.com/Leo_wl/p/7426618.html">https://www.cnblogs.com/Leo_wl/p/7426618.html</a><br />
+<a href="https://lrita.github.io/2017/05/26/golang-memory-pprof">https://lrita.github.io/2017/05/26/golang-memory-pprof</a>
+<a href="https://cizixs.com/2017/09/11/profiling-golang-program/">https://cizixs.com/2017/09/11/profiling-golang-program/</a>
+<a href="https://mp.weixin.qq.com/s/I9xSMxy32cALSNQAN8wlnQ">https://mp.weixin.qq.com/s/I9xSMxy32cALSNQAN8wlnQ</a>
+<a href="https://blog.gopheracademy.com/advent-2017/go-execution-tracer/">https://blog.gopheracademy.com/advent-2017/go-execution-tracer/</a></p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jayhong</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-04-22</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          <a href="https://jayhong.github.io/tags/golang/">golang</a>
+          <a href="https://jayhong.github.io/tags/blog/">blog</a>
+          <a href="https://jayhong.github.io/tags/pprof/">pprof</a>
+          <a href="https://jayhong.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/">
+            <span class="next-text nav-default">golang 逃逸分析</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "jayhong/jayhong.github.io"
+            issue-term="pathname"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+  
+
+  
+
+  
+
+  
+  
+    
+
+
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="295157977@qq.com" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="http://github.com/jayhong" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="https://jayhong.github.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    2019
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        jayhong
+        
+      </span></span>
+
+  
+  
+    <span id="busuanzi_container">
+      访客数/访问量：<span id="busuanzi_value_site_uv"></span>/<span id="busuanzi_value_site_pv"></span>
+    </span>
+  
+
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.dee43230127a73d039a734510fa896c89c3c7ce0cf0be0c7a7433f8fd69b76dc.js" integrity="sha256-3uQyMBJ6c9A5pzRRD6iWyJw8fODPC&#43;DHp0M/j9abdtw=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
